@@ -1,0 +1,25 @@
+{
+  "datasets": [
+    {
+      "id": "d_abc123",
+      "filename": "traffic_jan2024.csv",
+      "uploaded_at": "2026-06-20T10:30:00Z",
+      "row_count": 15420,
+      "status": "active"
+    },
+    {
+      "id": "d_def456",
+      "filename": "traffic_feb2024.csv",
+      "uploaded_at": "2026-06-20T10:32:00Z",
+      "row_count": 12850,
+      "status": "active"
+    },
+    {
+      "id": "d_ghi789",
+      "filename": "traffic_mar2024.csv",
+      "uploaded_at": "2026-06-20T10:45:00Z",
+      "row_count": 18200,
+      "status": "active"
+    }
+  ]
+}

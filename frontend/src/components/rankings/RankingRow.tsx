@@ -1,12 +1,11 @@
 import type { Hotspot, Severity } from '../../types';
-import { severityColor } from '../../lib/colors';
+import { cisToColor } from '../../lib/colors';
 import { PeakHourChip } from './PeakHourChip';
 
 interface RankingRowProps {
   hotspot: Hotspot;
   rank: number;
   isSelected: boolean;
-  mode: 'violations' | 'impact';
   onSelect: (cellId: string) => void;
 }
 
@@ -17,11 +16,8 @@ const tintClass: Record<Severity, string> = {
   low: 'bg-transparent',
 };
 
-export const RankingRow = ({ hotspot, rank, isSelected, mode, onSelect }: RankingRowProps) => {
-  const primaryValue = mode === 'violations' ? hotspot.violationCount : hotspot.congestionImpactScore;
-  const secondaryLabel = mode === 'violations' ? 'impact' : 'count';
-  const secondaryValue = mode === 'violations' ? hotspot.congestionImpactScore : hotspot.violationCount;
-  const color = severityColor[hotspot.severity];
+export const RankingRow = ({ hotspot, rank, isSelected, onSelect }: RankingRowProps) => {
+  const color = cisToColor(hotspot.congestionImpactScore);
 
   return (
     <button
@@ -60,15 +56,20 @@ export const RankingRow = ({ hotspot, rank, isSelected, mode, onSelect }: Rankin
             backgroundColor: isSelected ? `${color}20` : `${color}10`,
           }}
         >
-          {primaryValue}
+          {hotspot.congestionImpactScore}
         </span>
       </div>
-      <div className="mt-1.5 flex items-center gap-2 pl-6">
+      <div className="mt-1.5 flex flex-wrap items-center gap-2 pl-6">
         <span className={`text-[11px] ${
           isSelected ? 'text-stone-500 dark:text-stone-400' : 'text-stone-400 dark:text-stone-500'
         }`}>
-          {secondaryLabel} {secondaryValue}
+          {hotspot.violationCount} violations
         </span>
+        {hotspot.patrolTime && (
+          <span className="rounded-md bg-stone-800/90 px-1.5 py-0.5 font-mono text-[10px] font-medium text-stone-100 dark:bg-stone-200 dark:text-stone-900">
+            Deploy: {hotspot.patrolTime}
+          </span>
+        )}
         {hotspot.peakHours.length > 0 && (
           <div className="flex gap-1">
             {hotspot.peakHours.map((ph, i) => (

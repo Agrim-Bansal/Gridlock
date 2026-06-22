@@ -19,12 +19,19 @@ export interface Hotspot {
   severity: Severity;
   congestionImpactScore: number;
   peakHours: PeakHour[];
+  patrolTime: string | null;
+}
+
+export interface HeatmapCell {
+  cellId: string;
+  violationCount: number;
 }
 
 export interface PredictionResult {
   date: string;
   generatedAt: string;
-  hotspots: Hotspot[];
+  rankedHotspots: Hotspot[];
+  heatmapCells: HeatmapCell[];
 }
 
 export type DatasetStatus = 'processing' | 'active';

@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import type { Hotspot } from '../types';
+import type { Hotspot, HeatmapCell } from '../types';
 import { fetchPredictions } from '../api/predictions';
 
 interface PredictionState {
-  hotspots: Hotspot[];
+  rankedHotspots: Hotspot[];
+  heatmapCells: HeatmapCell[];
   selectedDate: string;
   selectedCellId: string | null;
   loading: boolean;
@@ -16,7 +17,8 @@ interface PredictionState {
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
 export const usePredictionStore = create<PredictionState>((set, get) => ({
-  hotspots: [],
+  rankedHotspots: [],
+  heatmapCells: [],
   selectedDate: todayStr(),
   selectedCellId: null,
   loading: false,
@@ -30,7 +32,12 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const result = await fetchPredictions(get().selectedDate);
-      set({ hotspots: result.hotspots, loading: false });
+      set({
+        rankedHotspots: result.rankedHotspots,
+        heatmapCells: result.heatmapCells,
+        selectedDate: result.date,
+        loading: false,
+      });
     } catch {
       set({ error: 'Failed to fetch predictions. Check backend connection.', loading: false });
     }

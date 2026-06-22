@@ -62,7 +62,7 @@ The frontend always sends a single `date`. No range, no multi-date.
 {
   "date": "2026-06-20",
   "generated_at": "2026-06-20T10:36:00Z",
-  "hotspots": [
+  "ranked_hotspots": [
     {
       "cell_id": "14345_83842",
       "location_name": "Silk Board Junction",
@@ -74,11 +74,16 @@ The frontend always sends a single `date`. No range, no multi-date.
       ],
       "severity": "critical",
       "congestion_impact_score": 94.7,
+      "patrol_time": "17:30",
       "peak_hours": [
         { "start": "08:00", "end": "09:30", "expected_violations": 85 },
         { "start": "17:30", "end": "19:00", "expected_violations": 120 }
       ]
     }
+  ],
+  "heatmap_cells": [
+    { "cell_id": "14335_83855", "violation_count": 163 },
+    { "cell_id": "14310_83820", "violation_count": 142 }
   ]
 }
 ```
@@ -87,9 +92,11 @@ The frontend always sends a single `date`. No range, no multi-date.
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
-| `date` | `string` (`YYYY-MM-DD`) | yes | Echo of the requested date. Must equal the query param. |
+| `date` | `string` (`YYYY-MM-DD`) | yes | Echo of the requested date (or the model's default **forecast date** — the day after the last training-data timestamp — when the client has no prior context). Must equal the query param when one was sent. |
 | `generated_at` | `string` (ISO 8601 UTC) | yes | When this prediction set was computed. |
-| `hotspots` | `Hotspot[]` | yes | Array of predicted hotspot cells. **May be empty** (`[]`) — that is a valid "no hotspots for this date" result, not an error (see §2.4). |
+| `ranked_hotspots` | `Hotspot[]` | yes | Top 20 cells by predicted violations, **sorted by `congestion_impact_score` descending**. Rendered as colored polygons on the map and in the ranking panel. **May be empty** (`[]`). |
+| `heatmap_cells` | `HeatmapCell[]` | yes | All other predicted cells (not in top 20). Rendered as a suppressed background heatmap (violation count only). **May be `[]`**. |
+| `hotspots` | `Hotspot[]` | optional | **Legacy.** Single combined array. If `ranked_hotspots` is absent, the frontend treats `hotspots` as `ranked_hotspots` and `heatmap_cells` as `[]`. |
 
 ### `Hotspot` object
 
@@ -100,8 +107,16 @@ The frontend always sends a single `date`. No range, no multi-date.
 | `violation_count` | `integer` | **yes** | Total predicted violations in this cell on `date`. Drives the "By Violations" ranking and is the basis for severity coloring. |
 | `violation_types` | `ViolationType[]` | **yes** | Breakdown of `violation_count` by category. May be `[]`. The counts should sum to (≈) `violation_count`; the frontend does not enforce this but the popup shows both. |
 | `severity` | `enum` | **yes** | One of `"low" \| "moderate" \| "high" \| "critical"`. **Computed by the backend** from violation-count percentiles across all cells for this date (see §2.2). The frontend renders this verbatim — it does not recompute. |
-| `congestion_impact_score` | `float` | **yes** | 0–100 composite score (road capacity × junction complexity × violation density). Drives the "By Impact" ranking. One decimal place is typical (e.g. `94.7`). |
+| `congestion_impact_score` | `float` | **yes** | 0–100 composite score (road capacity × junction complexity × violation density). Drives map polygon color and ranking order. One decimal place is typical (e.g. `94.7`). |
+| `patrol_time` | `string` (`HH:MM`, 24h) \| `null` | optional | Recommended patrol deployment time for this cell (e.g. `"17:30"`). Shown in the ranking panel and ranked-cell popups. May be `null` or omitted. |
 | `peak_hours` | `PeakHour[]` | **yes** | Forecasted high-density time windows. **May be `[]`** (a cell can have zero peak windows). |
+
+### `HeatmapCell` object
+
+| Field | Type | Required | Meaning |
+|---|---|---|---|
+| `cell_id` | `string` | **yes** | Grid cell identifier (§5). |
+| `violation_count` | `integer` | **yes** | Predicted violations in this cell on `date`. Used for suppressed heatmap rendering only. |
 
 ### `ViolationType` object
 
@@ -120,9 +135,17 @@ The frontend always sends a single `date`. No range, no multi-date.
 
 ### 2.1 Ordering
 
-The frontend re-sorts client-side for each ranked tab (by `violation_count` desc, and by `congestion_impact_score` desc), so **ordering of `hotspots` is not contractually required**. However, returning it pre-sorted by `violation_count` descending is preferred for predictable rendering and easier debugging.
+- **`ranked_hotspots`** must be pre-sorted by `congestion_impact_score` descending. The frontend renders this order as-is (no client re-sort).
+- **`heatmap_cells`** ordering is not contractually required.
+- Legacy **`hotspots`**: the frontend re-sorted client-side in older builds; prefer the split arrays above.
 
-### 2.2 Severity semantics (backend-owned)
+### 2.2 Map rendering split
+
+- **`ranked_hotspots`** (max 20): drawn as **polygons** on the map, fill color derived from `congestion_impact_score` (not `severity`).
+- **`heatmap_cells`**: drawn as a **suppressed background heatmap** from `violation_count` only (muted color, low opacity). Hover shows predicted violations.
+- **`severity`** is still returned for ranked cells (ranking row tint) but map polygon color follows CIS bands.
+
+### 2.3 Severity semantics (backend-owned)
 
 `severity` is **not** an absolute threshold — it is percentile-based across the cells returned for the given date, so the palette adapts to any dataset. Recommended mapping (matches the UI design):
 
@@ -133,17 +156,17 @@ The frontend re-sorts client-side for each ranked tab (by `violation_count` desc
 | `moderate` | 40th–70th percentile |
 | `low` | bottom 40% |
 
-The frontend trusts this field for fill color. If the backend cannot compute percentiles, it must still send a valid enum value for every hotspot.
+The frontend uses this field for ranking-row background tint. If the backend cannot compute percentiles, it must still send a valid enum value for every ranked hotspot.
 
-### 2.3 What NOT to send
+### 2.4 What NOT to send
 
 - **No `latitude` / `longitude`.** Geometry is derived from `cell_id` client-side (§5). Sending coordinates is ignored.
 - **No GeoJSON.** The frontend builds the polygons.
-- **No styling/color fields.** Color is derived from `severity`.
+- **No styling/color fields.** Color is derived client-side from `congestion_impact_score` (map) and `severity` (list tint).
 
-### 2.4 Empty result
+### 2.5 Empty result
 
-If the model has no hotspots for the requested date, return `200` with `"hotspots": []`. This renders the calm "No hotspots predicted for this date" state — it is **not** an error. Reserve non-2xx codes for the cases in §6 (e.g. no model trained yet → `409`).
+If the model has no hotspots for the requested date, return `200` with `"ranked_hotspots": []` and `"heatmap_cells": []`. This renders the calm "No hotspots predicted for this date" state — it is **not** an error. Reserve non-2xx codes for the cases in §6 (e.g. no model trained yet → `409`).
 
 ---
 
@@ -296,14 +319,14 @@ Deleting a non-existent `id` → `404` (see §6).
 
 ## 5. Grid cell system (shared source of truth)
 
-Every prediction is tied to a 100m × 100m grid cell, never an arbitrary point. The grid math is **shared** between backend and frontend — the backend is the source of truth, and the frontend mirrors these exact constants in `src/lib/grid.ts`.
+Every prediction is tied to a 300m × 300m grid cell, never an arbitrary point. The grid math is **shared** between backend and frontend — the backend is the source of truth, and the frontend mirrors these exact constants in `src/lib/grid.ts`.
 
 ```python
-CELL_KM        = 0.1
+CELL_KM        = 0.3
 KM_PER_DEG_LAT = 111.0
 COS_LAT        = cos(radians(13.0))            # reference latitude 13°N
-LAT_STEP       = CELL_KM / KM_PER_DEG_LAT       # ≈ 0.0009009°
-LON_STEP       = CELL_KM / (KM_PER_DEG_LAT * COS_LAT)  # ≈ 0.0009246°
+LAT_STEP       = CELL_KM / KM_PER_DEG_LAT       # ≈ 0.0027027°
+LON_STEP       = CELL_KM / (KM_PER_DEG_LAT * COS_LAT)  # ≈ 0.0027738°
 
 # point → cell_id
 i = round(lat / LAT_STEP)
@@ -354,7 +377,7 @@ For any non-2xx, return a JSON body the frontend (and logs) can read:
 | `error` | `string` | Stable machine-readable code (snake_case). |
 | `message` | `string` | Human-readable explanation. |
 
-> Distinction that matters for UX: **empty `200` with `hotspots: []`** = "model ran, nothing predicted for this date" (calm informational state). **`409`** = "no model trained yet" (CTA to upload data). Do not conflate them.
+> Distinction that matters for UX: **empty `200` with `ranked_hotspots: []` and `heatmap_cells: []`** = "model ran, nothing predicted for this date" (calm informational state). **`409`** = "no model trained yet" (CTA to upload data). Do not conflate them.
 
 ---
 
@@ -374,17 +397,23 @@ This contract is provisional and the backend is under active development. When a
 ```ts
 // GET /api/predictions?date=YYYY-MM-DD  → 200
 {
-  date: string;                 // "YYYY-MM-DD"
+  date: string;                 // "YYYY-MM-DD" — forecast date (day after last training data)
   generated_at: string;         // ISO 8601 UTC
-  hotspots: Array<{
+  ranked_hotspots: Array<{
     cell_id: string;            // "{i}_{j}"
     location_name?: string | null;
     violation_count: number;    // int
     violation_types: Array<{ type: string; count: number }>;
     severity: "low" | "moderate" | "high" | "critical";
-    congestion_impact_score: number;  // float 0–100
-    peak_hours: Array<{ start: string; end: string; expected_violations: number }>;  // "HH:MM"
+    congestion_impact_score: number;  // float 0–100, sorted desc
+    patrol_time?: string | null;      // "HH:MM" recommended deploy time
+    peak_hours: Array<{ start: string; end: string; expected_violations: number }>;
   }>;
+  heatmap_cells: Array<{
+    cell_id: string;
+    violation_count: number;
+  }>;
+  hotspots?: Array<...>;        // legacy — same shape as ranked_hotspots entry
 }
 
 // GET /api/model/status  → 200

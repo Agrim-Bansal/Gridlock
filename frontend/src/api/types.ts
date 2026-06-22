@@ -17,12 +17,21 @@ export interface RawHotspot {
   severity: 'low' | 'moderate' | 'high' | 'critical';
   congestion_impact_score: number;
   peak_hours: RawPeakHour[];
+  patrol_time?: string | null;
+}
+
+export interface RawHeatmapCell {
+  cell_id: string;
+  violation_count: number;
 }
 
 export interface RawPredictionResponse {
   date: string;
   generated_at: string;
-  hotspots: RawHotspot[];
+  /** Legacy: all hotspots in one array. Prefer ranked_hotspots + heatmap_cells. */
+  hotspots?: RawHotspot[];
+  ranked_hotspots?: RawHotspot[];
+  heatmap_cells?: RawHeatmapCell[];
 }
 
 export interface RawDataset {

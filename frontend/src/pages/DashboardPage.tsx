@@ -10,23 +10,33 @@ import { EmptyState } from '../components/shared/EmptyState';
 import { Spinner } from '../components/shared/Spinner';
 
 export const DashboardPage = () => {
-  const { hotspots, selectedDate, selectedCellId, loading, error, setSelectedDate, setSelectedCellId, loadPredictions } =
-    usePredictionStore();
+  const {
+    rankedHotspots,
+    heatmapCells,
+    selectedDate,
+    selectedCellId,
+    loading,
+    error,
+    setSelectedDate,
+    setSelectedCellId,
+    loadPredictions,
+  } = usePredictionStore();
   const modelStatus = useModelStore((s) => s.status);
   const { isDark } = useTheme();
   const hasMapbox = !!import.meta.env.VITE_MAPBOX_TOKEN;
 
   useEffect(() => {
-    if (modelStatus === 'ready' && hotspots.length === 0 && !loading) loadPredictions();
+    if (modelStatus === 'ready' && rankedHotspots.length === 0 && !loading) loadPredictions();
   }, [modelStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isTraining = modelStatus === 'training';
+  const hasData = rankedHotspots.length > 0 || heatmapCells.length > 0;
 
   return (
     <div className="flex h-full flex-col lg:flex-row">
       <aside className="w-full shrink-0 overflow-y-auto border-b border-stone-200/60 bg-white lg:w-[300px] lg:border-b-0 lg:border-r dark:border-stone-800/60 dark:bg-stone-900">
         <RankingPanel
-          hotspots={hotspots}
+          rankedHotspots={rankedHotspots}
           selectedCellId={selectedCellId}
           onSelectCell={setSelectedCellId}
           modelStatus={modelStatus}
@@ -60,15 +70,15 @@ export const DashboardPage = () => {
             {loading && <Spinner size="sm" />}
             {isTraining ? 'Training...' : 'Fetch predictions'}
           </button>
-          {hotspots.length > 0 && (
+          {rankedHotspots.length > 0 && (
             <span className="animate-fade-in text-xs tabular-nums text-stone-400 dark:text-stone-500">
-              {hotspots.length} hotspot{hotspots.length !== 1 ? 's' : ''}
+              {rankedHotspots.length} patrol target{rankedHotspots.length !== 1 ? 's' : ''}
             </span>
           )}
         </div>
 
         <div className="relative flex-1">
-          {modelStatus === 'idle' && hotspots.length === 0 ? (
+          {modelStatus === 'idle' && !hasData ? (
             <div className="flex h-full items-center justify-center px-8">
               <EmptyState
                 title="No predictions yet"
@@ -79,20 +89,22 @@ export const DashboardPage = () => {
             </div>
           ) : hasMapbox ? (
             <HotspotMap
-              hotspots={hotspots}
+              rankedHotspots={rankedHotspots}
+              heatmapCells={heatmapCells}
               selectedCellId={selectedCellId}
               onSelectCell={setSelectedCellId}
               isDark={isDark}
             />
           ) : (
             <MapFallback
-              hotspots={hotspots}
+              rankedHotspots={rankedHotspots}
+              heatmapCells={heatmapCells}
               selectedCellId={selectedCellId}
               onSelectCell={setSelectedCellId}
               isDark={isDark}
             />
           )}
-          {loading && hotspots.length > 0 && (
+          {loading && hasData && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px] dark:bg-stone-950/30">
               <div className="flex items-center gap-2.5 rounded-xl bg-white/90 px-5 py-3 shadow-lg dark:bg-stone-800/90">
                 <Spinner />

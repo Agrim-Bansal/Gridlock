@@ -37,6 +37,10 @@ def _reset_state():
     model_state.status = "idle"
     model_state.last_trained_at = None
 
+    from app.services.ranking_snapshot import clear_snapshot
+
+    clear_snapshot()
+
     import app.ml
 
     app.ml._instance = None

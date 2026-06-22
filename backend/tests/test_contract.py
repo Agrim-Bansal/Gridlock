@@ -89,43 +89,115 @@ def test_upload_valid_csv():
 
 
 def test_predictions_after_training():
+    from datetime import datetime
+
+    from app.db import SessionLocal
+    from app.ml import get_predictor
+    from app.models import ViolationRow
+    from app.services.ranking_snapshot import build_snapshot
+
     model_state.set_ready()
 
-    from app.ml import get_predictor
+    db = SessionLocal()
+    try:
+        rows = [
+            ViolationRow(
+                dataset_id="d_test",
+                timestamp=datetime(2024, 1, 15, 8, 30),
+                cell_id="4780_27925",
+                violation_type="No Parking",
+            ),
+            ViolationRow(
+                dataset_id="d_test",
+                timestamp=datetime(2024, 1, 15, 9, 0),
+                cell_id="4781_27926",
+                violation_type="No Parking",
+            ),
+            ViolationRow(
+                dataset_id="d_test",
+                timestamp=datetime(2024, 1, 15, 17, 30),
+                cell_id="4782_27927",
+                violation_type="No Parking",
+            ),
+        ]
+        predictor = get_predictor()
+        predictor.train(rows)
+        snapshot = build_snapshot(predictor, rows)
+        forecast_date = snapshot.date
+    finally:
+        db.close()
 
-    get_predictor()
-
-    r = client.get("/api/predictions?date=2026-06-20")
+    r = client.get(f"/api/predictions?date={forecast_date}")
     assert r.status_code == 200
     body = r.json()
-    assert body["date"] == "2026-06-20"
+    assert body["date"] == forecast_date
     assert "generated_at" in body
+    assert isinstance(body["ranked_hotspots"], list)
+    assert isinstance(body["heatmap_cells"], list)
     assert isinstance(body["hotspots"], list)
-    assert len(body["hotspots"]) > 0
+    assert len(body["ranked_hotspots"]) > 0
 
-    hotspot = body["hotspots"][0]
+    hotspot = body["ranked_hotspots"][0]
     assert "cell_id" in hotspot
     assert isinstance(hotspot["violation_count"], int)
     assert isinstance(hotspot["violation_types"], list)
     assert hotspot["severity"] in ("low", "moderate", "high", "critical")
     assert isinstance(hotspot["congestion_impact_score"], float)
+    assert "patrol_time" in hotspot
+    assert isinstance(hotspot["rank"], int)
     assert isinstance(hotspot["peak_hours"], list)
 
 
 def test_predictions_stable_per_date():
-    model_state.set_ready()
+    from datetime import datetime
 
-    r1 = client.get("/api/predictions?date=2026-06-20")
-    r2 = client.get("/api/predictions?date=2026-06-20")
-    assert r1.json()["hotspots"] == r2.json()["hotspots"]
+    from app.ml import get_predictor
+    from app.models import ViolationRow
+    from app.services.ranking_snapshot import build_snapshot
+
+    model_state.set_ready()
+    rows = [
+        ViolationRow(
+            dataset_id="d_test",
+            timestamp=datetime(2024, 1, 15, 8, 30),
+            cell_id="4780_27925",
+            violation_type="No Parking",
+        ),
+    ]
+    predictor = get_predictor()
+    predictor.train(rows)
+    snapshot = build_snapshot(predictor, rows)
+    forecast_date = snapshot.date
+
+    r1 = client.get(f"/api/predictions?date={forecast_date}")
+    r2 = client.get(f"/api/predictions?date={forecast_date}")
+    assert r1.json()["ranked_hotspots"] == r2.json()["ranked_hotspots"]
 
 
 def test_predictions_differ_by_date():
-    model_state.set_ready()
+    from datetime import datetime
 
-    r1 = client.get("/api/predictions?date=2026-06-20")
-    r2 = client.get("/api/predictions?date=2026-06-21")
-    assert r1.json()["hotspots"] != r2.json()["hotspots"]
+    from app.ml import get_predictor
+    from app.models import ViolationRow
+    from app.services.ranking_snapshot import build_snapshot
+
+    model_state.set_ready()
+    rows = [
+        ViolationRow(
+            dataset_id="d_test",
+            timestamp=datetime(2024, 1, 15, 8, 30),
+            cell_id="4780_27925",
+            violation_type="No Parking",
+        ),
+    ]
+    predictor = get_predictor()
+    predictor.train(rows)
+    snapshot = build_snapshot(predictor, rows)
+    forecast_date = snapshot.date
+
+    r1 = client.get(f"/api/predictions?date={forecast_date}")
+    r2 = client.get("/api/predictions?date=2099-01-01")
+    assert r1.json()["ranked_hotspots"] != r2.json()["ranked_hotspots"]
 
 
 def test_error_body_shape():

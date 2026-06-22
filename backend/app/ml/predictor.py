@@ -16,6 +16,8 @@ class HotspotPrediction:
     congestion_impact_score: float
     peak_hours: list[dict]
     location_name: str | None = None
+    patrol_time: str = ""
+    rank: int = 0
     severity: str = field(default="", repr=False)
 
 

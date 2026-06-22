@@ -8,16 +8,14 @@ interface CongestionListProps {
 }
 
 export const CongestionList = ({ hotspots, selectedCellId, onSelect }: CongestionListProps) => {
-  const sorted = [...hotspots].sort((a, b) => b.congestionImpactScore - a.congestionImpactScore);
   return (
     <div className="flex flex-col gap-1">
-      {sorted.map((h, i) => (
+      {hotspots.map((h, i) => (
         <div key={h.cellId} className="animate-fade-in" style={{ animationDelay: `${i * 30}ms` }}>
           <RankingRow
             hotspot={h}
             rank={i + 1}
             isSelected={h.cellId === selectedCellId}
-            mode="impact"
             onSelect={onSelect}
           />
         </div>

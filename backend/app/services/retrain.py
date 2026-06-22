@@ -5,6 +5,7 @@ from app.db import SessionLocal
 from app.ml import get_predictor
 from app.models import Dataset, ViolationRow
 from app.services.model_state import model_state
+from app.services.ranking_snapshot import build_snapshot, clear_snapshot
 
 
 def run_retrain(dataset_id: str | None = None) -> None:
@@ -17,10 +18,12 @@ def run_retrain(dataset_id: str | None = None) -> None:
 
         if not all_rows:
             model_state.set_idle()
+            clear_snapshot()
             return
 
         predictor = get_predictor()
         predictor.train(all_rows)
+        build_snapshot(predictor, all_rows)
 
         if dataset_id:
             ds = db.query(Dataset).filter(Dataset.id == dataset_id).first()
@@ -31,5 +34,6 @@ def run_retrain(dataset_id: str | None = None) -> None:
         model_state.set_ready()
     except Exception:
         model_state.set_idle()
+        clear_snapshot()
     finally:
         db.close()

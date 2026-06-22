@@ -1,4 +1,4 @@
-const CELL_KM = 0.1;
+const CELL_KM = 0.3;
 const KM_PER_DEG_LAT = 111.0;
 const COS_LAT = Math.cos((13.0 * Math.PI) / 180);
 const LAT_STEP = CELL_KM / KM_PER_DEG_LAT;

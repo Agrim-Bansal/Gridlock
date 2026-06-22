@@ -19,13 +19,22 @@ class HotspotOut(BaseModel):
     violation_types: list[ViolationTypeOut]
     severity: str
     congestion_impact_score: float
-    peak_hours: list[PeakHourOut]
+    patrol_time: str
+    rank: int
+    peak_hours: list[PeakHourOut] = []
+
+
+class HeatmapCellOut(BaseModel):
+    cell_id: str
+    violation_count: int
 
 
 class PredictionResponse(BaseModel):
     date: str
     generated_at: str
-    hotspots: list[HotspotOut]
+    ranked_hotspots: list[HotspotOut]
+    heatmap_cells: list[HeatmapCellOut]
+    hotspots: list[HotspotOut] = []
 
 
 class ModelStatusResponse(BaseModel):

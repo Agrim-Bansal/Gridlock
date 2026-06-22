@@ -21,6 +21,12 @@ export const HotspotPopup = ({ hotspot }: { hotspot: Hotspot }) => (
       <span>Congestion Impact</span>
       <span className="font-bold">{hotspot.congestionImpactScore} / 100</span>
     </div>
+    {hotspot.patrolTime && (
+      <div className="mt-1 flex justify-between">
+        <span>Deploy</span>
+        <span className="font-mono font-bold">{hotspot.patrolTime}</span>
+      </div>
+    )}
     {hotspot.peakHours.length > 0 && (
       <>
         <hr className="my-1.5 border-slate-200 dark:border-slate-600" />

@@ -64,7 +64,7 @@ The frontend always sends a single `date`. No range, no multi-date.
   "generated_at": "2026-06-20T10:36:00Z",
   "hotspots": [
     {
-      "cell_id": "14345_83842",
+      "cell_id": "4779_27984",
       "location_name": "Silk Board Junction",
       "violation_count": 342,
       "violation_types": [
@@ -296,14 +296,14 @@ Deleting a non-existent `id` → `404` (see §6).
 
 ## 5. Grid cell system (shared source of truth)
 
-Every prediction is tied to a 100m × 100m grid cell, never an arbitrary point. The grid math is **shared** between backend and frontend — the backend is the source of truth, and the frontend mirrors these exact constants in `src/lib/grid.ts`.
+Every prediction is tied to a 300m × 300m grid cell, never an arbitrary point. The grid math is **shared** between backend and frontend — the backend is the source of truth, and the frontend mirrors these exact constants in `src/lib/grid.ts`.
 
 ```python
-CELL_KM        = 0.1
+CELL_KM        = 0.3
 KM_PER_DEG_LAT = 111.0
 COS_LAT        = cos(radians(13.0))            # reference latitude 13°N
-LAT_STEP       = CELL_KM / KM_PER_DEG_LAT       # ≈ 0.0009009°
-LON_STEP       = CELL_KM / (KM_PER_DEG_LAT * COS_LAT)  # ≈ 0.0009246°
+LAT_STEP       = CELL_KM / KM_PER_DEG_LAT       # ≈ 0.002703°
+LON_STEP       = CELL_KM / (KM_PER_DEG_LAT * COS_LAT)  # ≈ 0.002774°
 
 # point → cell_id
 i = round(lat / LAT_STEP)
@@ -319,7 +319,7 @@ lon = j * LON_STEP
 
 - **`cell_id` format is exactly `"{i}_{j}"`** — two integers joined by a single underscore, no padding, no sign prefix beyond a literal `-` if negative. The frontend does `cellId.split("_").map(Number)`; anything else breaks geometry.
 - `i` is the latitude index, `j` is the longitude index. Order matters.
-- Example: `"14345_83842"` → center ≈ `(12.917°N, 77.623°E)`.
+- Example: `"4779_27984"` → center ≈ `(12.916°N, 77.622°E)`.
 - **If the backend ever changes `CELL_KM` or the reference latitude (13°N), it must notify the frontend team** so `src/lib/grid.ts` is updated in lockstep. A mismatch silently misplaces every cell on the map.
 
 ---

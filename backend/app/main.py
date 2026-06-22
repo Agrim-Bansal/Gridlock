@@ -1,3 +1,4 @@
+import traceback
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -13,6 +14,26 @@ from app.routers import data, model, predictions
 async def lifespan(app: FastAPI):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
+
+    from app.services.model_state import model_state
+
+    try:
+        print("[GRIDLOCK] Starting auto-train...", flush=True)
+        from app.ml import get_predictor
+        from app.ml.spectral_predictor import SpectralRidgePredictor
+
+        predictor = get_predictor()
+        print(f"[GRIDLOCK] Predictor type: {type(predictor).__name__}", flush=True)
+        if isinstance(predictor, SpectralRidgePredictor):
+            predictor.train_synthetic()
+            model_state.set_ready()
+            print("[GRIDLOCK] Model ready.", flush=True)
+        else:
+            print("[GRIDLOCK] Not spectral predictor, skipping auto-train.", flush=True)
+    except Exception:
+        print(f"[GRIDLOCK] Auto-train FAILED:\n{traceback.format_exc()}", flush=True)
+        model_state.set_idle()
+
     yield
 
 

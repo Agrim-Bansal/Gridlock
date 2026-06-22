@@ -3,8 +3,8 @@
   "generated_at": "2026-06-20T10:36:00Z",
   "hotspots": [
     {
-      "cell_id": "14345_83842",
-      "location_name": "Silk Board Junction",
+      "cell_id": "4779_27984",
+      "location_name": "Silk Board Junction 112",
       "violation_count": 342,
       "violation_types": [
         { "type": "Signal Jumping", "count": 145 },
@@ -19,7 +19,7 @@
       ]
     },
     {
-      "cell_id": "14380_83900",
+      "cell_id": "4813_28011",
       "location_name": "KR Puram",
       "violation_count": 287,
       "violation_types": [
@@ -34,7 +34,7 @@
       ]
     },
     {
-      "cell_id": "14360_83830",
+      "cell_id": "4795_28011",
       "location_name": "Marathahalli",
       "violation_count": 251,
       "violation_types": [
@@ -50,7 +50,7 @@
       ]
     },
     {
-      "cell_id": "14320_83870",
+      "cell_id": "4799_28030",
       "location_name": "Whitefield",
       "violation_count": 198,
       "violation_types": [
@@ -65,7 +65,7 @@
       ]
     },
     {
-      "cell_id": "14400_83810",
+      "cell_id": "4823_27975",
       "location_name": "Hebbal",
       "violation_count": 176,
       "violation_types": [
@@ -80,7 +80,7 @@
       ]
     },
     {
-      "cell_id": "14335_83855",
+      "cell_id": "4786_27985",
       "location_name": "Koramangala",
       "violation_count": 163,
       "violation_types": [
@@ -96,7 +96,7 @@
       ]
     },
     {
-      "cell_id": "14310_83820",
+      "cell_id": "4753_27998",
       "location_name": "Electronic City",
       "violation_count": 142,
       "violation_types": [
@@ -111,7 +111,7 @@
       ]
     },
     {
-      "cell_id": "14370_83860",
+      "cell_id": "4802_27991",
       "location_name": "Indiranagar",
       "violation_count": 118,
       "violation_types": [
@@ -126,7 +126,7 @@
       ]
     },
     {
-      "cell_id": "14390_83845",
+      "cell_id": "4847_27975",
       "location_name": "Yelahanka",
       "violation_count": 95,
       "violation_types": [
@@ -141,7 +141,7 @@
       ]
     },
     {
-      "cell_id": "14350_83875",
+      "cell_id": "4784_27970",
       "location_name": "Jayanagar",
       "violation_count": 78,
       "violation_types": [

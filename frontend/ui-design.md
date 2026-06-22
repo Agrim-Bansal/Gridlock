@@ -86,7 +86,7 @@ When a user clicks a list item, the corresponding cell highlights on the map and
 │  │              │  │  │        ┌──┐                                     │   │
 │  │▶1. Silk Board│  │  │     ┌──┤██├──┐   ┌─────────────────────────┐    │   │
 │  │ ██ 342 94.7  │  │  │     │██│▓▓│▓▓│   │ Silk Board Junction     │    │   │
-│  │ ███████████  │◀─┼──┼─────┤▓▓├──┘──┘   │ Cell: 14345_83842       │    │   │
+│  │ ███████████  │◀─┼──┼─────┤▓▓├──┘──┘   │ Cell: 4779_27984       │    │   │
 │  │              │  │  │     └──┘         │ Violations: 342          │    │   │
 │  │ 2. KR Puram  │  │  │                  │  Signal Jumping: 145     │    │   │
 │  │    287  78.2  │  │  │                  │  Wrong Lane: 98          │    │   │
@@ -293,7 +293,7 @@ After a file is selected but before confirming upload:
 ```
 ┌────────────────────────────────┐
 │  Silk Board Junction           │
-│  Cell: 14345_83842             │
+│  Cell: 4779_27984             │
 │────────────────────────────────│
 │  Violations        342         │
 │    Signal Jumping   145        │

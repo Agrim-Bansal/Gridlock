@@ -1,6 +1,6 @@
 from math import cos, radians
 
-CELL_KM = 0.1
+CELL_KM = 0.3
 KM_PER_DEG_LAT = 111.0
 COS_LAT = cos(radians(13.0))
 LAT_STEP = CELL_KM / KM_PER_DEG_LAT

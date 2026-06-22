@@ -13,7 +13,7 @@
 
 A web application that visualizes **ML-predicted traffic violation hotspots** across Bengaluru. Users upload CSV training data to manage the model's dataset. The model retrains on data changes and produces **per-day violation density predictions** with **peak-hour forecasts** derived from historical rolling averages.
 
-A dashboard displays date-specific predictions as color-coded 100m grid cells on an interactive map, alongside two tab-switchable ranked lists (by violation count and by congestion impact), each row carrying peak-hour forecasts.
+A dashboard displays date-specific predictions as color-coded 300m grid cells on an interactive map, alongside two tab-switchable ranked lists (by violation count and by congestion impact), each row carrying peak-hour forecasts.
 
 The product is two cooperating services with one narrow contract between them:
 
@@ -99,7 +99,7 @@ The **409 vs empty-200** distinction is load-bearing: 409 = "train a model first
 Full wireframes and visual specs: [`ui-design.md`](./frontend/ui-design.md). Summary:
 
 - **Layout:** top bar (logo / nav / theme) · 280px fixed side panel · main content · status bar (model pill · last trained · dataset count).
-- **Dashboard map:** full-bleed, centered on Bengaluru (12.9716°N, 77.5946°E, zoom 11). Hotspots are **GeoJSON polygon fill cells** (not circles), one per 100m grid cell. Fill gradient green→yellow→orange→red by percentile; opacity 0.6 base / 0.85 hover. Adjacent hot cells merge into heatmap-like blobs at low zoom; individual squares at high zoom. Click → popup (location name, cell ID, count, type breakdown, impact score, peak windows).
+- **Dashboard map:** full-bleed, centered on Bengaluru (12.9716°N, 77.5946°E, zoom 11). Hotspots are **GeoJSON polygon fill cells** (not circles), one per 300m grid cell. Fill gradient green→yellow→orange→red by percentile; opacity 0.6 base / 0.85 hover. Adjacent hot cells merge into heatmap-like blobs at low zoom; individual squares at high zoom. Click → popup (location name, cell ID, count, type breakdown, impact score, peak windows).
 - **Toolbar:** floating date picker + "Fetch Predictions"; disabled with spinner while training.
 - **Side panel:** two tabs — **By Violations** and **By Congestion Impact** — each row: rank, location name, metric badge, peak-hour chips. Click a row → highlight cell + fly + open popup.
 - **Data Management:** drag-and-drop `.csv` upload zone with 5-row preview; dataset table (filename, upload date, row count, status, delete); retrain pill in status bar.
@@ -110,19 +110,19 @@ Full wireframes and visual specs: [`ui-design.md`](./frontend/ui-design.md). Sum
 
 ## 5. Grid Cell System (shared source of truth)
 
-Every prediction is tied to a uniform **100m × 100m grid cell**, never an arbitrary point. The grid math is **shared** between backend and frontend. **The backend is the source of truth; the frontend mirrors it** in `src/lib/grid.ts`. A mismatch silently misplaces every cell on the map — treat these constants as a binding interface.
+Every prediction is tied to a uniform **300m × 300m grid cell**, never an arbitrary point. The grid math is **shared** between backend and frontend. **The backend is the source of truth; the frontend mirrors it** in `src/lib/grid.ts`. A mismatch silently misplaces every cell on the map — treat these constants as a binding interface.
 
 | Parameter | Value |
 |---|---|
-| Cell size | 0.1 km × 0.1 km |
+| Cell size | 0.3 km × 0.3 km |
 | `KM_PER_DEG_LAT` | 111.0 |
 | Reference latitude | 13.0°N (`COS_LAT = cos(radians(13))`) |
-| Latitude step | `0.1 / 111.0 ≈ 0.0009009°` |
-| Longitude step | `0.1 / (111.0 × cos 13°) ≈ 0.0009246°` |
+| Latitude step | `0.3 / 111.0 ≈ 0.002703°` |
+| Longitude step | `0.3 / (111.0 × cos 13°) ≈ 0.002774°` |
 | Cell ID format | `"{i}_{j}"`, `i = round(lat / LAT_STEP)`, `j = round(lon / LON_STEP)` |
 | Center recovery | `lat = i × LAT_STEP`, `lon = j × LON_STEP` |
 
-Example: `"14345_83842"` → center ≈ (12.917°N, 77.623°E).
+Example: `"4779_27984"` → center ≈ (12.916°N, 77.622°E).
 
 **Rules:**
 - `cell_id` is exactly two integers joined by one underscore — no padding, no extra signs. The frontend does `cellId.split("_").map(Number)`.
@@ -315,7 +315,7 @@ CORS owned by the backend (Nginx adds none): allow the frontend origin, methods 
 | No WebSocket | Manual fetch | Simpler; user picks a date and clicks fetch. |
 | One predictions endpoint | `/predictions?date=` returns everything | Count, impact, peaks are all per-cell-per-date — one call. |
 | Severity | Percentile-based, backend-owned | Adapts to any dataset; single owner; frontend renders verbatim. |
-| Grid cells not circles | Fill-layer rectangles on 100m grid | Accurate; merges into heatmap at low zoom. |
+| Grid cells not circles | Fill-layer rectangles on 300m grid | Accurate; merges into heatmap at low zoom. |
 | Raw/domain split (FE) | `api/types.ts` vs `types/index.ts` | Contract churn stays in `api/`. |
 | **Backend framework** | **FastAPI** | Pydantic models mirror the contract for free; BackgroundTasks for retrain; auto `/docs`; best fit for typed JSON + ML. |
 | **Persistence** | **SQLite + CSVs on disk** | No infra; restart-durable; right size for one VM. |

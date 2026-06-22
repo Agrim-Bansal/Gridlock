@@ -28,17 +28,17 @@ def test_cell_id_format():
 
 def test_known_example():
     # Verify the cell_id from the spec is in Bengaluru and round-trips
-    lat, lon = cell_id_to_center("14345_83842")
+    lat, lon = cell_id_to_center("4779_27984")
     assert 12.0 < lat < 14.0
     assert 76.0 < lon < 79.0
-    assert point_to_cell_id(lat, lon) == "14345_83842"
+    assert point_to_cell_id(lat, lon) == "4779_27984"
 
 
 def test_constants_match_spec():
-    assert CELL_KM == 0.1
+    assert CELL_KM == 0.3
     assert KM_PER_DEG_LAT == 111.0
-    assert abs(LAT_STEP - 0.1 / 111.0) < 1e-10
-    assert abs(LON_STEP - 0.1 / (111.0 * cos(radians(13.0)))) < 1e-10
+    assert abs(LAT_STEP - 0.3 / 111.0) < 1e-10
+    assert abs(LON_STEP - 0.3 / (111.0 * cos(radians(13.0)))) < 1e-10
 
 
 def test_deterministic():

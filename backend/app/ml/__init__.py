@@ -1,8 +1,10 @@
 from app.ml.predictor import Predictor
 from app.ml.stub import StubPredictor
+from app.ml.spectral_predictor import SpectralRidgePredictor
 
 _REGISTRY: dict[str, type] = {
     "stub": StubPredictor,
+    "spectral": SpectralRidgePredictor,
 }
 
 _instance: Predictor | None = None

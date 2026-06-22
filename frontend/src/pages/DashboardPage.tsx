@@ -21,6 +21,7 @@ export const DashboardPage = () => {
   }, [modelStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isTraining = modelStatus === 'training';
+  const isIdle = modelStatus === 'idle';
 
   return (
     <div className="flex h-full flex-col lg:flex-row">
@@ -54,11 +55,11 @@ export const DashboardPage = () => {
           />
           <button
             onClick={loadPredictions}
-            disabled={loading || isTraining}
+            disabled={loading || isTraining || isIdle}
             className="inline-flex items-center gap-2 rounded-lg bg-stone-800 px-4 py-1.5 text-sm font-medium text-stone-100 shadow-sm transition-all duration-200 hover:bg-stone-700 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 dark:bg-stone-200 dark:text-stone-900 dark:hover:bg-stone-100"
           >
             {loading && <Spinner size="sm" />}
-            {isTraining ? 'Training...' : 'Fetch predictions'}
+            {isTraining ? 'Training...' : isIdle ? 'No model' : 'Fetch predictions'}
           </button>
           {hotspots.length > 0 && (
             <span className="animate-fade-in text-xs tabular-nums text-stone-400 dark:text-stone-500">

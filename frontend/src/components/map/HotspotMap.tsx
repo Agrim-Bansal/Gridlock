@@ -85,7 +85,11 @@ export const HotspotMap = ({ hotspots, selectedCellId, onSelectCell, isDark }: H
     mapRef.current = map;
 
     map.on('load', () => {
-      map.addSource(SOURCE_ID, { type: 'geojson', data: buildGeoJSON([]) });
+      const geojson = buildGeoJSON(hotspotsRef.current);
+      geojson.features.forEach((f, i) => {
+        (f as GeoJSON.Feature).id = i;
+      });
+      map.addSource(SOURCE_ID, { type: 'geojson', data: geojson });
 
       map.addLayer({
         id: FILL_LAYER,

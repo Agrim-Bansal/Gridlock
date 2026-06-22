@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from app.models import ViolationRow
 
 BENGALURU_LANDMARKS: dict[str, tuple[float, float]] = {
-    "Silk Board Junction": (12.9172, 77.6230),
+    "Silk Board Junction 112": (12.9172, 77.6230),
     "Marathahalli Bridge": (12.9591, 77.6974),
     "KR Puram": (13.0068, 77.6965),
     "Hebbal Flyover": (13.0358, 77.5970),

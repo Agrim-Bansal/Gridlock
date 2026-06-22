@@ -36,7 +36,7 @@ Set `VITE_USE_MOCKS=true` to run against static JSON in `api/mocks/` without a l
 
 ## Grid Cell System
 
-The backend divides Bengaluru into 100m × 100m cells. `lib/grid.ts` mirrors the backend's grid math. Constants (`CELL_KM`, `KM_PER_DEG_LAT`, `COS_LAT` at 13°N) are the backend's source of truth — if the backend changes them, `grid.ts` must match. The frontend derives lat/lon and GeoJSON polygons from `cell_id` strings (format: `"{i}_{j}"`). No lat/lon comes from the API.
+The backend divides Bengaluru into 300m × 300m cells (`CELL_KM = 0.3`). `lib/grid.ts` mirrors the backend's grid math. Constants (`CELL_KM`, `KM_PER_DEG_LAT`, `COS_LAT` at 13°N) are the backend's source of truth — if the backend changes them, `grid.ts` must match. The frontend derives lat/lon and GeoJSON polygons from `cell_id` strings (format: `"{i}_{j}"`). No lat/lon comes from the API.
 
 ## Code Style
 

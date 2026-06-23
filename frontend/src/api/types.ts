@@ -66,3 +66,13 @@ export interface RawModelStatusResponse {
   dataset_count: number;
   total_rows: number;
 }
+
+export interface RawCellLocation {
+  road: string;
+  locality: string;
+  display_name: string;
+}
+
+export interface RawCellNamesResponse {
+  cell_names: Record<string, RawCellLocation>;
+}

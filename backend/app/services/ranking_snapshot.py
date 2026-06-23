@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -11,7 +12,10 @@ from app.config import settings
 from app.ml.predictor import HotspotPrediction, Predictor
 from app.models import ViolationRow
 from app.services.cis import compute_cis, zone_data_for_cell
+from app.services import geocode_lookup
 from app.services.severity import assign_severity_by_cis
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -40,6 +44,22 @@ class PredictionSnapshot:
     heatmap_cells: list[HeatmapCell] = field(default_factory=list)
 
 
+def _normalize_cis(ranked: list[RankedHotspot]) -> None:
+    """Normalize raw CIS scores to 0-100 for frontend compatibility."""
+    if not ranked:
+        return
+    raw = [r.congestion_impact_score for r in ranked]
+    max_s, min_s = max(raw), min(raw)
+    if max_s > min_s:
+        for r in ranked:
+            r.congestion_impact_score = round(
+                5.0 + 95.0 * (r.congestion_impact_score - min_s) / (max_s - min_s), 1
+            )
+    elif max_s > 0:
+        for r in ranked:
+            r.congestion_impact_score = 50.0
+
+
 _store: PredictionSnapshot | None = None
 
 
@@ -56,6 +76,7 @@ def build_snapshot(predictor: Predictor, rows: list[ViolationRow]) -> Prediction
         return None
 
     forecast_date = _forecast_date(predictor, rows)
+    logger.info("Building snapshot for %s (%d rows)", forecast_date.isoformat(), len(rows))
     raw = predictor.predict(forecast_date)
     if not raw:
         _store = PredictionSnapshot(
@@ -75,6 +96,16 @@ def build_snapshot(predictor: Predictor, rows: list[ViolationRow]) -> Prediction
     for h in shortlist:
         zone_data = zone_data_for_cell(h.cell_id, h.violation_count)
         cis_score, patrol_time = compute_cis(h.cell_id, h.violation_count, zone_data)
+        location = h.location_name
+        if not location:
+            location = geocode_lookup.resolve_display_name(h.cell_id)
+        if not location and isinstance(zone_data, dict):
+            road = zone_data.get("road_name")
+            locality = zone_data.get("locality")
+            if road and locality:
+                location = f"{road}, {locality}"
+            elif road:
+                location = road
         ranked.append(
             RankedHotspot(
                 cell_id=h.cell_id,
@@ -85,15 +116,24 @@ def build_snapshot(predictor: Predictor, rows: list[ViolationRow]) -> Prediction
                 violation_types=h.violation_types or [
                     {"type": "No Parking", "count": h.violation_count}
                 ],
-                location_name=h.location_name,
+                location_name=location,
             )
         )
 
+    _normalize_cis(ranked)
     ranked.sort(key=lambda r: r.congestion_impact_score, reverse=True)
     for i, item in enumerate(ranked, start=1):
         item.rank = i
 
     assign_severity_by_cis(ranked)
+    logger.info(
+        "Ranked %d hotspots (CIS range: %.1f–%.1f), top: %s (%.1f)",
+        len(ranked),
+        ranked[-1].congestion_impact_score if ranked else 0,
+        ranked[0].congestion_impact_score if ranked else 0,
+        ranked[0].cell_id if ranked else "-",
+        ranked[0].congestion_impact_score if ranked else 0,
+    )
 
     heatmap = [
         HeatmapCell(cell_id=h.cell_id, violation_count=h.violation_count)

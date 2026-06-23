@@ -12,6 +12,7 @@ from app.schemas import (
     PredictionResponse,
     ViolationTypeOut,
 )
+from app.services import geocode_lookup
 from app.services.model_state import model_state
 from app.services.ranking_snapshot import build_snapshot, get_any_snapshot, get_snapshot
 
@@ -35,9 +36,12 @@ def _hotspot_out(h) -> HotspotOut:
     peak_hours = getattr(h, "peak_hours", None)
     if not peak_hours and hasattr(h, "patrol_time"):
         peak_hours = _patrol_to_peak_hours(h.patrol_time, h.violation_count)
+    name = getattr(h, "location_name", None)
+    if not name:
+        name = geocode_lookup.resolve_display_name(h.cell_id)
     return HotspotOut(
         cell_id=h.cell_id,
-        location_name=getattr(h, "location_name", None),
+        location_name=name,
         violation_count=h.violation_count,
         violation_types=[ViolationTypeOut(**vt) for vt in h.violation_types],
         severity=h.severity,

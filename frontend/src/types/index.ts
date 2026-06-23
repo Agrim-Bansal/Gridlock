@@ -28,6 +28,14 @@ export interface HeatmapCell {
   violationCount: number;
 }
 
+export interface CellLocation {
+  road: string;
+  locality: string;
+  displayName: string;
+}
+
+export type CellNameMap = Record<string, CellLocation>;
+
 export interface PredictionResult {
   date: string;
   generatedAt: string;

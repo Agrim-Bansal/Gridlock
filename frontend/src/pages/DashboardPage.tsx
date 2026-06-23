@@ -12,7 +12,6 @@ import { Spinner } from '../components/shared/Spinner';
 export const DashboardPage = () => {
   const {
     rankedHotspots,
-    heatmapCells,
     selectedDate,
     selectedCellId,
     loading,
@@ -20,17 +19,22 @@ export const DashboardPage = () => {
     setSelectedDate,
     setSelectedCellId,
     loadPredictions,
+    loadCellNames,
   } = usePredictionStore();
   const modelStatus = useModelStore((s) => s.status);
   const { isDark } = useTheme();
   const hasMapbox = !!import.meta.env.VITE_MAPBOX_TOKEN;
 
   useEffect(() => {
+    loadCellNames();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (modelStatus === 'ready' && rankedHotspots.length === 0 && !loading) loadPredictions();
   }, [modelStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isTraining = modelStatus === 'training';
-  const hasData = rankedHotspots.length > 0 || heatmapCells.length > 0;
+  const hasData = rankedHotspots.length > 0;
 
   return (
     <div className="flex h-full flex-col overflow-hidden lg:flex-row">
@@ -70,9 +74,9 @@ export const DashboardPage = () => {
             {loading && <Spinner size="sm" />}
             {isTraining ? 'Training...' : 'Fetch predictions'}
           </button>
-          {heatmapCells.length > 0 && (
+          {rankedHotspots.length > 0 && (
             <span className="animate-fade-in text-xs tabular-nums text-stone-400 dark:text-stone-500">
-              {rankedHotspots.length} patrol · {heatmapCells.length} cells on map
+              {rankedHotspots.length} patrol hotspots on map
             </span>
           )}
         </div>
@@ -90,7 +94,6 @@ export const DashboardPage = () => {
           ) : hasMapbox ? (
             <HotspotMap
               rankedHotspots={rankedHotspots}
-              heatmapCells={heatmapCells}
               selectedCellId={selectedCellId}
               onSelectCell={setSelectedCellId}
               isDark={isDark}
@@ -98,7 +101,6 @@ export const DashboardPage = () => {
           ) : (
             <MapFallback
               rankedHotspots={rankedHotspots}
-              heatmapCells={heatmapCells}
               selectedCellId={selectedCellId}
               onSelectCell={setSelectedCellId}
               isDark={isDark}

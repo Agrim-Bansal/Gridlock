@@ -10,7 +10,10 @@ class Settings(BaseSettings):
     predictor: str = "stub"
     cis_api_key: str | None = None
     cis_top_k: int = 20
-    cis_time_slots: list[str] = ["08:00", "12:00", "17:00", "21:00"]
+    cis_time_slots: list[str] = ["06:00", "12:00", "18:00", "00:00"]
+    mappls_client_id: str | None = None
+    mappls_client_secret: str | None = None
+    geocode_data_path: str = "../api_data/api_responses_predict/reverse_geocode_predict.json"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

@@ -18,6 +18,7 @@ export const ViolationList = ({ hotspots, selectedCellId, onSelect }: ViolationL
             hotspot={h}
             rank={i + 1}
             isSelected={h.cellId === selectedCellId}
+            mode="violations"
             onSelect={onSelect}
           />
         </div>

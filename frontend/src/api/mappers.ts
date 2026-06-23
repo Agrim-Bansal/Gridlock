@@ -5,8 +5,9 @@ import type {
   RawDataset,
   RawModelStatusResponse,
   RawUploadResponse,
+  RawCellNamesResponse,
 } from './types';
-import type { Hotspot, HeatmapCell, PredictionResult, Dataset, ModelInfo } from '../types';
+import type { Hotspot, HeatmapCell, PredictionResult, Dataset, ModelInfo, CellNameMap } from '../types';
 
 export const mapHotspot = (raw: RawHotspot): Hotspot => ({
   cellId: raw.cell_id,
@@ -37,7 +38,7 @@ export const mapPredictions = (raw: RawPredictionResponse): PredictionResult => 
     date: raw.date,
     generatedAt: raw.generated_at,
     rankedHotspots: rankedRaw.map(mapHotspot),
-    heatmapCells: heatmapRaw.map(mapHeatmapCell),
+    heatmapCells: heatmapRaw.map(mapHeatmapCell).filter((c) => c.violationCount > 0),
   };
 };
 
@@ -55,3 +56,15 @@ export const mapModelInfo = (raw: RawModelStatusResponse): ModelInfo => ({
   datasetCount: raw.dataset_count,
   totalRows: raw.total_rows,
 });
+
+export const mapCellNames = (raw: RawCellNamesResponse): CellNameMap => {
+  const result: CellNameMap = {};
+  for (const [cellId, loc] of Object.entries(raw.cell_names)) {
+    result[cellId] = {
+      road: loc.road,
+      locality: loc.locality,
+      displayName: loc.display_name,
+    };
+  }
+  return result;
+};

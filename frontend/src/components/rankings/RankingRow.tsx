@@ -1,11 +1,13 @@
 import type { Hotspot, Severity } from '../../types';
-import { cisToColor } from '../../lib/colors';
+import { severityColor } from '../../lib/colors';
+import { usePredictionStore } from '../../stores/predictionStore';
 import { PeakHourChip } from './PeakHourChip';
 
 interface RankingRowProps {
   hotspot: Hotspot;
   rank: number;
   isSelected: boolean;
+  mode: 'violations' | 'impact';
   onSelect: (cellId: string) => void;
 }
 
@@ -16,8 +18,12 @@ const tintClass: Record<Severity, string> = {
   low: 'bg-transparent',
 };
 
-export const RankingRow = ({ hotspot, rank, isSelected, onSelect }: RankingRowProps) => {
-  const color = cisToColor(hotspot.congestionImpactScore);
+export const RankingRow = ({ hotspot, rank, isSelected, mode, onSelect }: RankingRowProps) => {
+  const geo = usePredictionStore((s) => s.cellNames[hotspot.cellId]);
+  const primaryValue = mode === 'violations' ? hotspot.violationCount : hotspot.congestionImpactScore;
+  const secondaryLabel = mode === 'violations' ? 'impact' : 'count';
+  const secondaryValue = mode === 'violations' ? hotspot.congestionImpactScore : hotspot.violationCount;
+  const color = severityColor[hotspot.severity];
 
   return (
     <button
@@ -41,13 +47,20 @@ export const RankingRow = ({ hotspot, rank, isSelected, onSelect }: RankingRowPr
           }`}>
             {rank}
           </span>
-          <span className={`truncate text-[13px] ${
-            isSelected
-              ? 'font-semibold text-stone-900 dark:text-white'
-              : 'font-medium text-stone-700 dark:text-stone-300'
-          }`}>
-            {hotspot.locationName || `Cell ${hotspot.cellId}`}
-          </span>
+          <div className="min-w-0">
+            <span className={`block truncate text-[13px] ${
+              isSelected
+                ? 'font-semibold text-stone-900 dark:text-white'
+                : 'font-medium text-stone-700 dark:text-stone-300'
+            }`}>
+              {hotspot.locationName || geo?.displayName || `Cell ${hotspot.cellId}`}
+            </span>
+            {geo && (
+              <span className="block truncate text-[10px] text-stone-400 dark:text-stone-500">
+                {geo.locality}
+              </span>
+            )}
+          </div>
         </div>
         <span
           className="shrink-0 rounded-md px-1.5 py-0.5 font-mono text-sm font-semibold tabular-nums"
@@ -56,14 +69,14 @@ export const RankingRow = ({ hotspot, rank, isSelected, onSelect }: RankingRowPr
             backgroundColor: isSelected ? `${color}20` : `${color}10`,
           }}
         >
-          {hotspot.congestionImpactScore}
+          {primaryValue}
         </span>
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-2 pl-6">
         <span className={`text-[11px] ${
           isSelected ? 'text-stone-500 dark:text-stone-400' : 'text-stone-400 dark:text-stone-500'
         }`}>
-          {hotspot.violationCount} violations
+          {secondaryLabel} {secondaryValue}
         </span>
         {hotspot.patrolTime && (
           <span className="rounded-md bg-stone-800/90 px-1.5 py-0.5 font-mono text-[10px] font-medium text-stone-100 dark:bg-stone-200 dark:text-stone-900">

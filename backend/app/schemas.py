@@ -64,3 +64,13 @@ class DeleteResponse(BaseModel):
 class ErrorResponse(BaseModel):
     error: str
     message: str
+
+
+class CellLocationOut(BaseModel):
+    road: str
+    locality: str
+    display_name: str
+
+
+class CellNamesResponse(BaseModel):
+    cell_names: dict[str, CellLocationOut]

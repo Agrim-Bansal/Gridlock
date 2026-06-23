@@ -1,0 +1,69 @@
+{
+  "cell_names": {
+    "4781_27947": {
+      "road": "Hosur Road",
+      "locality": "Silk Board",
+      "display_name": "Hosur Road, Silk Board"
+    },
+    "4793_27966": {
+      "road": "Old Madras Road",
+      "locality": "KR Puram",
+      "display_name": "Old Madras Road, KR Puram"
+    },
+    "4787_27943": {
+      "road": "Outer Ring Road",
+      "locality": "Marathahalli",
+      "display_name": "Outer Ring Road, Marathahalli"
+    },
+    "4773_27957": {
+      "road": "Whitefield Main Road",
+      "locality": "Whitefield",
+      "display_name": "Whitefield Main Road, Whitefield"
+    },
+    "4800_27937": {
+      "road": "Bellary Road",
+      "locality": "Hebbal",
+      "display_name": "Bellary Road, Hebbal"
+    },
+    "4778_27952": {
+      "road": "Sarjapur Road",
+      "locality": "HSR Layout",
+      "display_name": "Sarjapur Road, HSR Layout"
+    },
+    "4770_27940": {
+      "road": "Varthur Main Road",
+      "locality": "Varthur",
+      "display_name": "Varthur Main Road, Varthur"
+    },
+    "4790_27960": {
+      "road": "100 Feet Road",
+      "locality": "Indiranagar",
+      "display_name": "100 Feet Road, Indiranagar"
+    },
+    "4797_27948": {
+      "road": "Bannerghatta Road",
+      "locality": "Jayanagar",
+      "display_name": "Bannerghatta Road, Jayanagar"
+    },
+    "4783_27958": {
+      "road": "HAL Airport Road",
+      "locality": "HAL",
+      "display_name": "HAL Airport Road, HAL"
+    },
+    "4765_27935": {
+      "road": "Kanakapura Road",
+      "locality": "JP Nagar",
+      "display_name": "Kanakapura Road, JP Nagar"
+    },
+    "4805_27970": {
+      "road": "MG Road",
+      "locality": "Shivaji Nagar",
+      "display_name": "MG Road, Shivaji Nagar"
+    },
+    "4768_27955": {
+      "road": "Mysore Road",
+      "locality": "Kengeri",
+      "display_name": "Mysore Road, Kengeri"
+    }
+  }
+}

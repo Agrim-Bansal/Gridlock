@@ -1,22 +1,20 @@
 import { useRef, useEffect, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import type { Hotspot, HeatmapCell } from '../../types';
+import type { Hotspot } from '../../types';
+import { usePredictionStore } from '../../stores/predictionStore';
 import { cellToGeoJSON } from '../../lib/grid';
-import { cisToColor, heatmapFill } from '../../lib/colors';
+import { cisToColor } from '../../lib/colors';
 import { BENGALURU_CENTER, DEFAULT_ZOOM, SELECTED_ZOOM, MAP_STYLE } from '../../lib/mapConfig';
 
 interface HotspotMapProps {
   rankedHotspots: Hotspot[];
-  heatmapCells: HeatmapCell[];
   selectedCellId: string | null;
   onSelectCell: (cellId: string | null) => void;
   isDark: boolean;
 }
 
 const RANKED_SOURCE = 'ranked-hotspots';
-const HEATMAP_SOURCE = 'heatmap-cells';
-const HEATMAP_FILL = 'heatmap-fill';
 const RANKED_FILL = 'ranked-fill';
 const RANKED_OUTLINE = 'ranked-outline';
 
@@ -38,29 +36,8 @@ const buildRankedGeoJSON = (hotspots: Hotspot[]): GeoJSON.FeatureCollection => (
   }),
 });
 
-const buildHeatmapGeoJSON = (cells: HeatmapCell[]): GeoJSON.FeatureCollection => {
-  const maxCount = cells.reduce((m, c) => Math.max(m, c.violationCount), 0);
-  return {
-    type: 'FeatureCollection',
-    features: cells.map((c) => {
-      const feature = cellToGeoJSON(c.cellId);
-      const { color, opacity } = heatmapFill(c.violationCount, maxCount);
-      return {
-        ...feature,
-        properties: {
-          cellId: c.cellId,
-          violationCount: c.violationCount,
-          color,
-          opacity,
-        },
-      };
-    }),
-  };
-};
-
 export const HotspotMap = ({
   rankedHotspots,
-  heatmapCells,
   selectedCellId,
   onSelectCell,
   isDark,
@@ -69,9 +46,10 @@ export const HotspotMap = ({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const rankedRef = useRef(rankedHotspots);
-  const heatmapRef = useRef(heatmapCells);
-  rankedRef.current = rankedHotspots;
-  heatmapRef.current = heatmapCells;
+  useEffect(() => { rankedRef.current = rankedHotspots; }, [rankedHotspots]);
+  const cellNames = usePredictionStore((s) => s.cellNames);
+  const cellNamesRef = useRef(cellNames);
+  useEffect(() => { cellNamesRef.current = cellNames; }, [cellNames]);
 
   const showRankedPopup = useCallback((map: mapboxgl.Map, cellId: string) => {
     const h = rankedRef.current.find((x) => x.cellId === cellId);
@@ -83,12 +61,18 @@ export const HotspotMap = ({
 
     popupRef.current?.remove();
 
+    const geo = cellNamesRef.current[h.cellId];
+    const title = h.locationName || `Cell ${h.cellId}`;
+    const subtitle = geo
+      ? `<span style="color:#888;font-size:11px">${geo.locality}</span><br/>`
+      : '';
     const types = h.violationTypes.map((vt) => `  ${vt.type}: ${vt.count}`).join('\n');
     const patrolLine = h.patrolTime
       ? `<br/>Deploy: <b>${h.patrolTime}</b>`
       : '';
     const html = `<div style="font-family:system-ui;font-size:12px;line-height:1.5;min-width:200px">
-      <b>${h.locationName || `Cell ${h.cellId}`}</b><br/>
+      <b>${title}</b><br/>
+      ${subtitle}
       <span style="color:#888">Cell: ${h.cellId}</span>
       <hr style="margin:4px 0;border-color:#e2e8f0"/>
       <b>Violations: ${h.violationCount}</b>
@@ -99,24 +83,6 @@ export const HotspotMap = ({
     </div>`;
 
     popupRef.current = new mapboxgl.Popup({ closeOnClick: true, maxWidth: '280px' })
-      .setLngLat([lng, lat])
-      .setHTML(html)
-      .addTo(map);
-  }, []);
-
-  const showHeatmapPopup = useCallback((map: mapboxgl.Map, cellId: string, violationCount: number) => {
-    const feature = cellToGeoJSON(cellId);
-    const coords = feature.geometry.coordinates[0];
-    const lng = (coords[0][0] + coords[2][0]) / 2;
-    const lat = (coords[0][1] + coords[2][1]) / 2;
-
-    popupRef.current?.remove();
-    const html = `<div style="font-family:system-ui;font-size:12px;line-height:1.5">
-      <span style="color:#888">Cell: ${cellId}</span><br/>
-      <b>Predicted violations: ${violationCount}</b>
-    </div>`;
-
-    popupRef.current = new mapboxgl.Popup({ closeOnClick: true, maxWidth: '220px' })
       .setLngLat([lng, lat])
       .setHTML(html)
       .addTo(map);
@@ -138,18 +104,7 @@ export const HotspotMap = ({
     mapRef.current = map;
 
     map.on('load', () => {
-      map.addSource(HEATMAP_SOURCE, { type: 'geojson', data: buildHeatmapGeoJSON([]) });
       map.addSource(RANKED_SOURCE, { type: 'geojson', data: buildRankedGeoJSON([]) });
-
-      map.addLayer({
-        id: HEATMAP_FILL,
-        type: 'fill',
-        source: HEATMAP_SOURCE,
-        paint: {
-          'fill-color': ['get', 'color'],
-          'fill-opacity': ['get', 'opacity'],
-        },
-      });
 
       map.addLayer({
         id: RANKED_FILL,
@@ -172,7 +127,6 @@ export const HotspotMap = ({
       });
 
       let rankedHoveredId: string | number | undefined;
-      let heatmapHoveredId: string | number | undefined;
 
       const setState = (
         source: string,
@@ -183,25 +137,6 @@ export const HotspotMap = ({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         map.setFeatureState({ source, id } as any, state);
       };
-
-      map.on('mousemove', HEATMAP_FILL, (e) => {
-        if (e.features?.[0]) {
-          setState(HEATMAP_SOURCE, heatmapHoveredId, { hover: false });
-          heatmapHoveredId = e.features[0].id;
-          setState(HEATMAP_SOURCE, heatmapHoveredId, { hover: true });
-          map.getCanvas().style.cursor = 'pointer';
-          const cellId = e.features[0].properties?.cellId as string;
-          const count = e.features[0].properties?.violationCount as number;
-          if (cellId) showHeatmapPopup(map, cellId, count);
-        }
-      });
-
-      map.on('mouseleave', HEATMAP_FILL, () => {
-        setState(HEATMAP_SOURCE, heatmapHoveredId, { hover: false });
-        heatmapHoveredId = undefined;
-        map.getCanvas().style.cursor = '';
-        popupRef.current?.remove();
-      });
 
       map.on('mousemove', RANKED_FILL, (e) => {
         if (e.features?.[0]) {
@@ -245,15 +180,8 @@ export const HotspotMap = ({
     const applyData = () => {
       if (!map.isStyleLoaded()) return;
 
-      const heatSrc = map.getSource(HEATMAP_SOURCE) as mapboxgl.GeoJSONSource | undefined;
       const rankedSrc = map.getSource(RANKED_SOURCE) as mapboxgl.GeoJSONSource | undefined;
-      if (!heatSrc || !rankedSrc) return;
-
-      const heatGeo = buildHeatmapGeoJSON(heatmapCells);
-      heatGeo.features.forEach((f, i) => {
-        (f as GeoJSON.Feature).id = i;
-      });
-      heatSrc.setData(heatGeo);
+      if (!rankedSrc) return;
 
       const rankedGeo = buildRankedGeoJSON(rankedHotspots);
       rankedGeo.features.forEach((f, i) => {
@@ -267,7 +195,7 @@ export const HotspotMap = ({
     return () => {
       map.off('style.load', applyData);
     };
-  }, [rankedHotspots, heatmapCells]);
+  }, [rankedHotspots]);
 
   useEffect(() => {
     const map = mapRef.current;

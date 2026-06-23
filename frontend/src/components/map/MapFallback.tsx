@@ -1,14 +1,14 @@
 import { useRef, useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import type { Hotspot, HeatmapCell } from '../../types';
-import { cellCenter, cellBounds } from '../../lib/grid';
-import { cisToColor, heatmapFill } from '../../lib/colors';
+import type { Hotspot } from '../../types';
+import { usePredictionStore } from '../../stores/predictionStore';
+import { cellCenter } from '../../lib/grid';
+import { cisToColor } from '../../lib/colors';
 import { BENGALURU_CENTER, DEFAULT_ZOOM, SELECTED_ZOOM, TILE_LAYER } from '../../lib/mapConfig';
 
 interface MapFallbackProps {
   rankedHotspots: Hotspot[];
-  heatmapCells: HeatmapCell[];
   selectedCellId: string | null;
   onSelectCell: (cellId: string | null) => void;
   isDark: boolean;
@@ -18,7 +18,6 @@ const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)')
 
 export const MapFallback = ({
   rankedHotspots,
-  heatmapCells,
   selectedCellId,
   onSelectCell,
   isDark,
@@ -28,6 +27,7 @@ export const MapFallback = ({
   const tileRef = useRef<L.TileLayer | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
   const onSelectRef = useRef(onSelectCell);
+  const cellNames = usePredictionStore((s) => s.cellNames);
 
   useEffect(() => {
     onSelectRef.current = onSelectCell;
@@ -60,22 +60,7 @@ export const MapFallback = ({
     const group = L.layerGroup().addTo(map);
     layerRef.current = group;
 
-    const maxHeat = heatmapCells.reduce((m, c) => Math.max(m, c.violationCount), 0);
     const points: L.LatLngExpression[] = [];
-
-    heatmapCells.forEach((c) => {
-      const { color, opacity } = heatmapFill(c.violationCount, maxHeat);
-      const ring = cellBounds(c.cellId).map(([lon, lat]) => [lat, lon] as L.LatLngExpression);
-      L.polygon(ring, {
-        color,
-        weight: 0,
-        fillColor: color,
-        fillOpacity: opacity,
-        opacity: 0,
-      })
-        .bindTooltip(`${c.violationCount} predicted violations`, { direction: 'top' })
-        .addTo(group);
-    });
 
     rankedHotspots.forEach((h) => {
       const [lat, lon] = cellCenter(h.cellId);
@@ -91,8 +76,9 @@ export const MapFallback = ({
         opacity: selected ? 1 : 0.85,
       });
       const patrol = h.patrolTime ? ` · Deploy ${h.patrolTime}` : '';
+      const label = h.locationName || cellNames[h.cellId]?.displayName || `Cell ${h.cellId}`;
       marker.bindTooltip(
-        `${h.locationName || `Cell ${h.cellId}`} · CIS ${h.congestionImpactScore} · ${h.violationCount} violations${patrol}`,
+        `${label} · CIS ${h.congestionImpactScore} · ${h.violationCount} violations${patrol}`,
         { direction: 'top', offset: [0, -4] },
       );
       marker.on('click', (e) => {
@@ -105,7 +91,7 @@ export const MapFallback = ({
     if (points.length && !selectedCellId) {
       map.fitBounds(L.latLngBounds(points).pad(0.25), { maxZoom: 14, animate: false });
     }
-  }, [rankedHotspots, heatmapCells, selectedCellId]);
+  }, [rankedHotspots, selectedCellId, cellNames]);
 
   useEffect(() => {
     const map = mapRef.current;

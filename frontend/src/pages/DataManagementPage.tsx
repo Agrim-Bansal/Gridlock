@@ -58,6 +58,7 @@ export const DataManagementPage = () => {
           Upload training data
         </h2>
         <UploadZone onUpload={handleUpload} uploading={uploading} />
+        {!isFormatError && <div className="mt-4"><UploadFormatHint /></div>}
       </section>
 
       <section className="animate-fade-in" style={{ animationDelay: '80ms' }}>

@@ -7,12 +7,14 @@ from app.config import settings
 from app.db import Base, engine
 from app.errors import GridlockError, gridlock_error_handler
 from app.routers import data, model, predictions
+from app.services.startup import recover_model_on_startup
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
+    recover_model_on_startup()
     yield
 
 

@@ -12,12 +12,14 @@ interface BackendError {
 
 function extractUploadError(err: unknown): { message: string; isFormatError: boolean } {
   if (err instanceof AxiosError && err.response?.data) {
-    const body = err.response.data as BackendError;
-    const isFormat = FORMAT_ERROR_CODES.includes(body.error ?? '');
-    return {
-      message: body.message || 'Failed to upload dataset.',
-      isFormatError: isFormat,
-    };
+    const body = err.response.data as BackendError & { detail?: string | unknown };
+    const message =
+      body.message ||
+      (typeof body.detail === 'string' ? body.detail : 'Failed to upload dataset.');
+    const isFormat =
+      FORMAT_ERROR_CODES.includes(body.error ?? '') ||
+      /missing required column|only csv|empty_csv|invalid_csv|unparseable/i.test(message);
+    return { message, isFormatError: isFormat };
   }
   return { message: 'Failed to upload dataset.', isFormatError: false };
 }

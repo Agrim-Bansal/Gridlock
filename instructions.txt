@@ -1,0 +1,100 @@
+1. Clone the repo
+
+```bash
+git clone <repo-url> gridlock
+cd gridlock
+```
+
+You now have two main directories: `backend/` (Python/FastAPI) and `frontend/` (React/Vite).
+
+
+2. Backend setup
+
+2.1 Create a virtual environment and install dependencies
+
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate        # macOS / Linux
+# On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+2.2 Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+This creates `backend/.env`. Open it and review:
+
+```env
+DATA_DIR=./data
+DATABASE_URL=sqlite:///./data/gridlock.db
+RETRAIN_DELAY_S=2.0
+CORS_ORIGINS=["http://localhost:5173"]
+PREDICTOR=spectral
+CIS_API_KEY=
+CIS_TOP_K=20
+MAPPLS_CLIENT_ID=
+MAPPLS_CLIENT_SECRET=
+GEOCODE_DATA_PATH=../api_data/api_responses_predict/reverse_geocode_predict.json
+```
+
+Put in api keys and secrets if you have them. Otherwise, leave them blank — the app will still work with mock data.
+
+2.3 Start the backend
+
+```bash
+# Make sure the venv is activated
+uvicorn app.main:app --reload --port 8000
+```
+
+You should see output like:
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Database initialized at sqlite:///./data/gridlock.db
+```
+
+3. Frontend setup
+
+Open a **second terminal** (keep the backend running in the first).
+
+3.1 Install dependencies
+
+```bash
+cd frontend
+npm ci
+```
+
+3.2 Configure environment variables
+
+The frontend ships with a `.env` file already at `frontend/.env`:
+
+```env
+VITE_API_BASE_URL=/api
+VITE_MAPBOX_TOKEN=
+VITE_USE_MOCKS=false
+```
+Change the base url to the port at which the backend is running (default: `http://localhost:8000`):
+
+
+3.3 Start the frontend
+
+```bash
+npm run dev
+```
+
+Output:
+
+```
+  VITE v5.x.x  ready in Xms
+
+  ➜  Local:   http://localhost:5173/
+```
+
+3.4 Open the app
+
+Go to **http://localhost:5173** in your browser.
+

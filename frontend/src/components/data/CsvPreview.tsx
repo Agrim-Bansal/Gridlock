@@ -34,7 +34,7 @@ export const CsvPreview = ({ filename, fileSize, headers, rows, onCancel, onUplo
         </svg>
       </button>
     </div>
-    <div className="overflow-x-auto">
+    <div className="max-h-[40vh] overflow-auto">
       <table className="w-full font-mono text-xs">
         <thead>
           <tr className="bg-stone-50 dark:bg-stone-800/50">

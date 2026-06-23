@@ -18,7 +18,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   return (
     <div className="flex h-screen flex-col bg-stone-50 text-stone-900 transition-colors duration-300 dark:bg-stone-950 dark:text-stone-100">
       <TopBar isDark={isDark} onToggleTheme={toggle} />
-      <main className="flex-1 overflow-hidden">{children}</main>
+      <main className="flex-1 overflow-y-auto">{children}</main>
       <StatusBar status={status} lastTrainedAt={lastTrainedAt} datasetCount={datasetCount} />
     </div>
   );

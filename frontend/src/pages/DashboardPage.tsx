@@ -33,7 +33,7 @@ export const DashboardPage = () => {
   const hasData = rankedHotspots.length > 0 || heatmapCells.length > 0;
 
   return (
-    <div className="flex h-full flex-col lg:flex-row">
+    <div className="flex h-full flex-col overflow-hidden lg:flex-row">
       <aside className="w-full shrink-0 overflow-y-auto border-b border-stone-200/60 bg-white lg:w-[300px] lg:border-b-0 lg:border-r dark:border-stone-800/60 dark:bg-stone-900">
         <RankingPanel
           rankedHotspots={rankedHotspots}

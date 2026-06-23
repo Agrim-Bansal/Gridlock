@@ -240,23 +240,33 @@ export const HotspotMap = ({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map) return;
 
-    const heatSrc = map.getSource(HEATMAP_SOURCE) as mapboxgl.GeoJSONSource | undefined;
-    const rankedSrc = map.getSource(RANKED_SOURCE) as mapboxgl.GeoJSONSource | undefined;
-    if (!heatSrc || !rankedSrc) return;
+    const applyData = () => {
+      if (!map.isStyleLoaded()) return;
 
-    const heatGeo = buildHeatmapGeoJSON(heatmapCells);
-    heatGeo.features.forEach((f, i) => {
-      (f as GeoJSON.Feature).id = i;
-    });
-    heatSrc.setData(heatGeo);
+      const heatSrc = map.getSource(HEATMAP_SOURCE) as mapboxgl.GeoJSONSource | undefined;
+      const rankedSrc = map.getSource(RANKED_SOURCE) as mapboxgl.GeoJSONSource | undefined;
+      if (!heatSrc || !rankedSrc) return;
 
-    const rankedGeo = buildRankedGeoJSON(rankedHotspots);
-    rankedGeo.features.forEach((f, i) => {
-      (f as GeoJSON.Feature).id = i;
-    });
-    rankedSrc.setData(rankedGeo);
+      const heatGeo = buildHeatmapGeoJSON(heatmapCells);
+      heatGeo.features.forEach((f, i) => {
+        (f as GeoJSON.Feature).id = i;
+      });
+      heatSrc.setData(heatGeo);
+
+      const rankedGeo = buildRankedGeoJSON(rankedHotspots);
+      rankedGeo.features.forEach((f, i) => {
+        (f as GeoJSON.Feature).id = i;
+      });
+      rankedSrc.setData(rankedGeo);
+    };
+
+    applyData();
+    map.on('style.load', applyData);
+    return () => {
+      map.off('style.load', applyData);
+    };
   }, [rankedHotspots, heatmapCells]);
 
   useEffect(() => {

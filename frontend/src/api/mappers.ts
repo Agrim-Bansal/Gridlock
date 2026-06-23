@@ -21,6 +21,7 @@ export const mapHotspot = (raw: RawHotspot): Hotspot => ({
     expectedViolations: ph.expected_violations,
   })),
   patrolTime: raw.patrol_time ?? null,
+  rank: raw.rank ?? null,
 });
 
 export const mapHeatmapCell = (raw: RawHeatmapCell): HeatmapCell => ({

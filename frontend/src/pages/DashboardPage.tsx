@@ -70,9 +70,9 @@ export const DashboardPage = () => {
             {loading && <Spinner size="sm" />}
             {isTraining ? 'Training...' : 'Fetch predictions'}
           </button>
-          {rankedHotspots.length > 0 && (
+          {heatmapCells.length > 0 && (
             <span className="animate-fade-in text-xs tabular-nums text-stone-400 dark:text-stone-500">
-              {rankedHotspots.length} patrol target{rankedHotspots.length !== 1 ? 's' : ''}
+              {rankedHotspots.length} patrol · {heatmapCells.length} cells on map
             </span>
           )}
         </div>

@@ -7,6 +7,7 @@ interface CongestionListProps {
   onSelect: (cellId: string) => void;
 }
 
+/** Top-20 shortlist in CIS priority order (backend-ranked patrol targets). */
 export const CongestionList = ({ hotspots, selectedCellId, onSelect }: CongestionListProps) => {
   return (
     <div className="flex flex-col gap-1">
@@ -14,7 +15,7 @@ export const CongestionList = ({ hotspots, selectedCellId, onSelect }: Congestio
         <div key={h.cellId} className="animate-fade-in" style={{ animationDelay: `${i * 30}ms` }}>
           <RankingRow
             hotspot={h}
-            rank={i + 1}
+            rank={h.rank ?? i + 1}
             isSelected={h.cellId === selectedCellId}
             onSelect={onSelect}
           />

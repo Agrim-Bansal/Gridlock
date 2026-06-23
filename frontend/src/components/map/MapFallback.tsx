@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Hotspot, HeatmapCell } from '../../types';
-import { cellCenter } from '../../lib/grid';
+import { cellCenter, cellBounds } from '../../lib/grid';
 import { cisToColor, heatmapFill } from '../../lib/colors';
 import { BENGALURU_CENTER, DEFAULT_ZOOM, SELECTED_ZOOM, TILE_LAYER } from '../../lib/mapConfig';
 
@@ -64,17 +64,16 @@ export const MapFallback = ({
     const points: L.LatLngExpression[] = [];
 
     heatmapCells.forEach((c) => {
-      const [lat, lon] = cellCenter(c.cellId);
       const { color, opacity } = heatmapFill(c.violationCount, maxHeat);
-      L.circleMarker([lat, lon], {
-        radius: 5,
+      const ring = cellBounds(c.cellId).map(([lon, lat]) => [lat, lon] as L.LatLngExpression);
+      L.polygon(ring, {
         color,
         weight: 0,
         fillColor: color,
         fillOpacity: opacity,
         opacity: 0,
       })
-        .bindTooltip(`${c.violationCount} predicted violations`, { direction: 'top', offset: [0, -4] })
+        .bindTooltip(`${c.violationCount} predicted violations`, { direction: 'top' })
         .addTo(group);
     });
 

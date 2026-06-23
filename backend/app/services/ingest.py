@@ -8,7 +8,14 @@ from app.grid import point_to_cell_id
 from app.models import ViolationRow
 
 _COLUMN_ALIASES: dict[str, list[str]] = {
-    "timestamp": ["timestamp", "time", "datetime", "date_time"],
+    "timestamp": [
+        "timestamp",
+        "time",
+        "datetime",
+        "date_time",
+        "created_datetime",
+        "created_datetime_ist",
+    ],
     "latitude": ["latitude", "lat"],
     "longitude": ["longitude", "lon", "lng", "long"],
     "violation_type": ["violation_type", "violation", "type"],
@@ -86,9 +93,23 @@ def _resolve_columns(headers: list[str]) -> dict[str, str]:
 
 
 def _parse_timestamp(raw: str) -> datetime | None:
+    # ISO with offset e.g. 2023-11-20 00:28:46+00:00 or +05:30
+    cleaned = raw.strip()
+    if cleaned.endswith("Z"):
+        cleaned = cleaned[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(cleaned.replace(" ", "T", 1) if "T" not in cleaned and "+" in cleaned[10:] else cleaned)
+    except ValueError:
+        pass
+    # Fallback: strip timezone suffix and parse as naive local time
+    for sep in ("+", "-"):
+        idx = cleaned.rfind(sep)
+        if idx > 10:
+            cleaned = cleaned[:idx]
+            break
     for fmt in _TIMESTAMP_FORMATS:
         try:
-            return datetime.strptime(raw, fmt)
+            return datetime.strptime(cleaned.strip(), fmt)
         except ValueError:
             continue
     return None

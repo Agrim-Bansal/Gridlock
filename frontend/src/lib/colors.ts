@@ -22,10 +22,14 @@ export const cisToColor = (score: number): string => {
   return severityColor.low;
 };
 
-const HEATMAP_MUTED = '#64748b';
+const HEATMAP_LOW = '#94a3b8';
+const HEATMAP_HIGH = '#dc2626';
 
-/** Muted fill for suppressed heatmap cells; opacity scales with normalized count. */
+/** Violation-intensity fill for heatmap cells; opacity scales with normalized count. */
 export const heatmapFill = (violationCount: number, maxCount: number): { color: string; opacity: number } => {
   const t = maxCount > 0 ? violationCount / maxCount : 0;
-  return { color: HEATMAP_MUTED, opacity: 0.06 + t * 0.28 };
+  // Blend slate → red by intensity; keep readable on both map styles
+  const opacity = 0.12 + t * 0.45;
+  const color = t >= 0.66 ? HEATMAP_HIGH : t >= 0.33 ? '#f97316' : HEATMAP_LOW;
+  return { color, opacity };
 };

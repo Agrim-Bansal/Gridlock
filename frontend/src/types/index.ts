@@ -20,6 +20,7 @@ export interface Hotspot {
   congestionImpactScore: number;
   peakHours: PeakHour[];
   patrolTime: string | null;
+  rank: number | null;
 }
 
 export interface HeatmapCell {

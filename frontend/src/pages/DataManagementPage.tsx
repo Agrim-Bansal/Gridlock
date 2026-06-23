@@ -1,18 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDataStore } from '../stores/dataStore';
 import { useModelStore } from '../stores/modelStore';
 import { UploadZone } from '../components/data/UploadZone';
 import { DatasetTable } from '../components/data/DatasetTable';
+import { UploadFormatHint } from '../components/data/UploadFormatHint';
 import { ErrorBanner } from '../components/shared/ErrorBanner';
 import { Spinner } from '../components/shared/Spinner';
 
 export const DataManagementPage = () => {
-  const { datasets, loading, uploading, error, loadDatasets, upload, remove } = useDataStore();
+  const { datasets, loading, uploading, error, isFormatError, loadDatasets, refreshDatasets, upload, remove } =
+    useDataStore();
   const fetchModelStatus = useModelStore((s) => s.fetchStatus);
+  const modelStatus = useModelStore((s) => s.status);
+  const prevModelStatus = useRef(modelStatus);
 
   useEffect(() => {
     loadDatasets();
   }, [loadDatasets]);
+
+  useEffect(() => {
+    const hasProcessing = datasets.some((d) => d.status === 'processing');
+    if (!hasProcessing) return;
+    const interval = setInterval(refreshDatasets, 5000);
+    return () => clearInterval(interval);
+  }, [datasets, refreshDatasets]);
+
+  useEffect(() => {
+    if (prevModelStatus.current === 'training' && modelStatus === 'ready') {
+      refreshDatasets();
+    }
+    prevModelStatus.current = modelStatus;
+  }, [modelStatus, refreshDatasets]);
 
   const handleUpload = async (file: File) => {
     await upload(file);
@@ -29,10 +47,11 @@ export const DataManagementPage = () => {
       {error && (
         <ErrorBanner
           message={error}
-          onDismiss={() => useDataStore.setState({ error: null })}
+          onDismiss={() => useDataStore.setState({ error: null, isFormatError: false })}
           onRetry={loadDatasets}
         />
       )}
+      {isFormatError && <UploadFormatHint />}
 
       <section className="animate-fade-in">
         <h2 className="mb-4 font-serif text-xl text-stone-800 dark:text-stone-200">

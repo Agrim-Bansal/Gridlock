@@ -7,7 +7,7 @@ interface ViolationListProps {
   onSelect: (cellId: string) => void;
 }
 
-/** Legacy list sorted by violation count. Prefer CongestionList for CIS-ranked patrol targets. */
+/** Top-20 shortlist sorted by predicted violation count. */
 export const ViolationList = ({ hotspots, selectedCellId, onSelect }: ViolationListProps) => {
   const sorted = [...hotspots].sort((a, b) => b.violationCount - a.violationCount);
   return (

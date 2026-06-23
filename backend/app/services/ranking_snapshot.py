@@ -95,11 +95,9 @@ def build_snapshot(predictor: Predictor, rows: list[ViolationRow]) -> Prediction
 
     assign_severity_by_cis(ranked)
 
-    shortlisted_ids = {r.cell_id for r in ranked}
     heatmap = [
         HeatmapCell(cell_id=h.cell_id, violation_count=h.violation_count)
         for h in raw
-        if h.cell_id not in shortlisted_ids
     ]
 
     snapshot = PredictionSnapshot(

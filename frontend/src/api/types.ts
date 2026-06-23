@@ -18,6 +18,7 @@ export interface RawHotspot {
   congestion_impact_score: number;
   peak_hours: RawPeakHour[];
   patrol_time?: string | null;
+  rank?: number;
 }
 
 export interface RawHeatmapCell {

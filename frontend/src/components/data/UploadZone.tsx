@@ -18,9 +18,11 @@ export const UploadZone = ({ onUpload, uploading }: UploadZoneProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
   const [previewRows, setPreviewRows] = useState<string[][]>([]);
+  const [localError, setLocalError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const parseFile = (f: File) => {
+    setLocalError(null);
     setFile(f);
     Papa.parse(f, {
       preview: 6,
@@ -38,12 +40,22 @@ export const UploadZone = ({ onUpload, uploading }: UploadZoneProps) => {
     e.preventDefault();
     setDragOver(false);
     const f = e.dataTransfer.files[0];
-    if (f?.name.endsWith('.csv')) parseFile(f);
+    if (!f) return;
+    if (!f.name.toLowerCase().endsWith('.csv')) {
+      setLocalError('Only .csv files are accepted. See the expected format below.');
+      return;
+    }
+    parseFile(f);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) parseFile(f);
+    if (!f) return;
+    if (!f.name.toLowerCase().endsWith('.csv')) {
+      setLocalError('Only .csv files are accepted. See the expected format below.');
+      return;
+    }
+    parseFile(f);
   };
 
   const handleUpload = async () => {
@@ -77,6 +89,12 @@ export const UploadZone = ({ onUpload, uploading }: UploadZoneProps) => {
   }
 
   return (
+    <div>
+      {localError && (
+        <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+          {localError}
+        </p>
+      )}
     <div
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
@@ -107,6 +125,7 @@ export const UploadZone = ({ onUpload, uploading }: UploadZoneProps) => {
         onChange={handleFileSelect}
         className="hidden"
       />
+    </div>
     </div>
   );
 };

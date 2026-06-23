@@ -13,13 +13,24 @@ interface BackendError {
 function extractUploadError(err: unknown): { message: string; isFormatError: boolean } {
   if (err instanceof AxiosError && err.response?.data) {
     const body = err.response.data as BackendError & { detail?: string | unknown };
+    const status = err.response.status;
     const message =
       body.message ||
       (typeof body.detail === 'string' ? body.detail : 'Failed to upload dataset.');
     const isFormat =
+      status === 422 ||
+      status === 415 ||
       FORMAT_ERROR_CODES.includes(body.error ?? '') ||
-      /missing required column|only csv|empty_csv|invalid_csv|unparseable/i.test(message);
+      /missing required column|only csv|empty_csv|invalid_csv|unparseable|no valid data/i.test(
+        message,
+      );
     return { message, isFormatError: isFormat };
+  }
+  if (err instanceof AxiosError && !err.response) {
+    return {
+      message: 'Cannot reach the backend. Is the API running and CORS configured?',
+      isFormatError: false,
+    };
   }
   return { message: 'Failed to upload dataset.', isFormatError: false };
 }

@@ -32,6 +32,13 @@ export const DataManagementPage = () => {
     prevModelStatus.current = modelStatus;
   }, [modelStatus, refreshDatasets]);
 
+  // Poll quickly while retrain runs so status bar does not stick on training/idle.
+  useEffect(() => {
+    if (modelStatus !== 'training') return;
+    const interval = setInterval(fetchModelStatus, 2000);
+    return () => clearInterval(interval);
+  }, [modelStatus, fetchModelStatus]);
+
   const handleUpload = async (file: File) => {
     await upload(file);
     fetchModelStatus();
@@ -58,7 +65,7 @@ export const DataManagementPage = () => {
           Upload training data
         </h2>
         <UploadZone onUpload={handleUpload} uploading={uploading} />
-        {!isFormatError && <div className="mt-4"><UploadFormatHint /></div>}
+        <div className="mt-4"><UploadFormatHint /></div>
       </section>
 
       <section className="animate-fade-in" style={{ animationDelay: '80ms' }}>

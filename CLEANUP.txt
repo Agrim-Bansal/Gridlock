@@ -1,0 +1,150 @@
+GRIDLOCK CLEANUP AUDIT
+======================
+
+Generated: 2026-06-23
+
+
+1. SECURITY (fix first)
+-----------------------
+cis_pipeline.py                    — Hardcoded Mappls CLIENT_ID / CLIENT_SECRET. Rotate if ever pushed.
+
+
+2. AI ARTIFACTS
+---------------
+.claude/                           — Claude Code local config
+.claude/settings.local.json        — Local AI permission allowlist
+CLAUDE.md                          — AI assistant instructions
+CIS_TODO.md                        — Deferred work checklist
+STATUS.md                          — Hackathon status tracker, likely stale
+
+Borderline docs (useful but AI-generated):
+  spec.md
+  PHILOSOPHY.md
+  PIPELINE.md
+  API_CONTRACT.md
+  frontend/ui-design.md
+  backend/deploy/DEPLOY.md
+  backend/app/ml/README.md
+
+
+3. DATA FILES (~452K, 52+ files)
+--------------------------------
+
+Redundant batch JSONs (47 files) — intermediate pipeline dumps, merged into all_hourly_data.json:
+  api_data/api_responses_predict/traffic_prev_day_h00_batch_0.json
+  api_data/api_responses_predict/traffic_prev_day_h00_batch_1.json
+  api_data/api_responses_predict/traffic_prev_day_h00_batch_2.json
+  api_data/api_responses_predict/traffic_prev_day_h00_batch_3.json
+  api_data/api_responses_predict/traffic_prev_day_h00_batch_4.json
+  api_data/api_responses_predict/traffic_prev_day_h06_batch_0.json
+  api_data/api_responses_predict/traffic_prev_day_h06_batch_1.json
+  api_data/api_responses_predict/traffic_prev_day_h06_batch_2.json
+  api_data/api_responses_predict/traffic_prev_day_h06_batch_3.json
+  api_data/api_responses_predict/traffic_prev_day_h06_batch_4.json
+  api_data/api_responses_predict/traffic_prev_day_h12_batch_0.json
+  api_data/api_responses_predict/traffic_prev_day_h12_batch_1.json
+  api_data/api_responses_predict/traffic_prev_day_h12_batch_2.json
+  api_data/api_responses_predict/traffic_prev_day_h12_batch_3.json
+  api_data/api_responses_predict/traffic_prev_day_h12_batch_4.json
+  api_data/api_responses_predict/traffic_prev_day_h18_batch_0.json
+  api_data/api_responses_predict/traffic_prev_day_h18_batch_1.json
+  api_data/api_responses_predict/traffic_prev_day_h18_batch_2.json
+  api_data/api_responses_predict/traffic_prev_day_h18_batch_3.json
+  api_data/api_responses_predict/traffic_prev_day_h18_batch_4.json
+  api_data/api_responses_predict/traffic_same_weekday_h00_batch_0.json
+  api_data/api_responses_predict/traffic_same_weekday_h00_batch_1.json
+  api_data/api_responses_predict/traffic_same_weekday_h00_batch_2.json
+  api_data/api_responses_predict/traffic_same_weekday_h00_batch_3.json
+  api_data/api_responses_predict/traffic_same_weekday_h00_batch_4.json
+  api_data/api_responses_predict/traffic_same_weekday_h06_batch_0.json
+  api_data/api_responses_predict/traffic_same_weekday_h06_batch_1.json
+  api_data/api_responses_predict/traffic_same_weekday_h06_batch_2.json
+  api_data/api_responses_predict/traffic_same_weekday_h06_batch_3.json
+  api_data/api_responses_predict/traffic_same_weekday_h06_batch_4.json
+  api_data/api_responses_predict/traffic_same_weekday_h12_batch_0.json
+  api_data/api_responses_predict/traffic_same_weekday_h12_batch_1.json
+  api_data/api_responses_predict/traffic_same_weekday_h12_batch_2.json
+  api_data/api_responses_predict/traffic_same_weekday_h12_batch_3.json
+  api_data/api_responses_predict/traffic_same_weekday_h12_batch_4.json
+  api_data/api_responses_predict/traffic_same_weekday_h18_batch_0.json
+  api_data/api_responses_predict/traffic_same_weekday_h18_batch_1.json
+  api_data/api_responses_predict/traffic_same_weekday_h18_batch_2.json
+  api_data/api_responses_predict/traffic_same_weekday_h18_batch_3.json
+  api_data/api_responses_predict/traffic_same_weekday_h18_batch_4.json
+  api_data/api_responses_predict/freeflow_batch_0.json
+  api_data/api_responses_predict/freeflow_batch_1.json
+  api_data/api_responses_predict/freeflow_batch_2.json
+  api_data/api_responses_predict/freeflow_batch_3.json
+  api_data/api_responses_predict/freeflow_batch_4.json
+  api_data/api_responses_predict/freeflow_all.json
+  api_data/api_responses_predict/slot_congestion_profiles.json
+
+Duplicate CSVs (different hashes — pick one):
+  api_data/cis_predictions.csv
+  scripts/output/cis_predictions.csv
+
+Demo data (keep only if demo matters):
+  api_data/demo_april1_2024.csv
+  api_data/api_responses_predict/all_hourly_data.json
+  api_data/api_responses_predict/reverse_geocode_predict.json
+  api_data/api_responses_predict/poi_nearby_all.json
+
+
+4. CACHE / BUILD ARTIFACTS
+--------------------------
+frontend/node_modules/             — ~199M, npm install artifact
+backend/venv/                      — ~71M, Python virtualenv
+frontend/dist/                     — ~2.3M, Vite build output
+backend/.pytest_cache/             — pytest cache
+backend/app/__pycache__/           — 8 .pyc files
+backend/app/ml/__pycache__/        — includes orphan spectral_predictor.cpython-313.pyc (no source)
+backend/app/routers/__pycache__/   — bytecode cache
+backend/app/services/__pycache__/  — bytecode cache
+backend/tests/__pycache__/         — 6 .pyc files
+scripts/__pycache__/               — 4 .pyc files, TRACKED IN GIT
+
+
+5. OS / TEMP JUNK
+-----------------
+.DS_Store                          — macOS metadata, tracked in git
+api_data/.DS_Store                 — tracked in git
+frontend/.DS_Store                 — on disk
+frontend/vite.config.ts.timestamp-*.mjs  — Vite dev cache
+
+
+6. DEAD / UNUSED ASSETS
+------------------------
+frontend/src/assets/hero.png       — zero imports in codebase
+frontend/src/assets/react.svg      — zero imports (Vite scaffold leftover)
+frontend/src/assets/vite.svg       — zero imports (Vite scaffold leftover)
+frontend/README.md                 — default Vite boilerplate, no project content
+
+
+7. ONE-OFF SCRIPTS
+------------------
+cis_pipeline.py                    — 595-line monolith, superseded by scripts/compute_cis.py
+scripts/compute_cis.py             — CIS pipeline CLI, keep only if regenerating CIS
+scripts/mappls_client.py           — Mappls API client, only used by compute_cis.py
+scripts/cis_compute.py             — CIS math, only imported by compute_cis.py
+scripts/requirements.txt           — separate deps, overlaps backend/requirements.txt
+scripts/output/                    — generated output directory
+scripts/__init__.py                — package marker for one-off scripts
+
+
+8. ENV FILES
+------------
+frontend/.env                      — tracked in git (low risk, empty tokens)
+frontend/.env.production           — identical to frontend/.env, duplicate
+
+
+9. MISSING: ROOT .gitignore
+----------------------------
+No root .gitignore exists. This is why .DS_Store, __pycache__/, venv/,
+node_modules/, .env files are tracked or unignored. Adding one prevents recurrence.
+
+
+KEEP (not cleanup candidates)
+-----------------------------
+frontend/src/api/mocks/*           — required for VITE_USE_MOCKS=true mode
+backend/.env.example               — template with empty secrets
+spec.md, API_CONTRACT.md, ui-design.md  — if actively referenced
